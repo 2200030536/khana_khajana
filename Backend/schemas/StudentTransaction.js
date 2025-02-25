@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const studentTransactionSchema = new mongoose.Schema({
   studentId: {
@@ -33,7 +34,8 @@ const studentTransactionSchema = new mongoose.Schema({
   uniqueToken: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    default: uuidv4
   }
 });
 
