@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Menu Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input, button {
+      margin: 5px 0;
+      padding: 10px;
+      width: 100%;
+      max-width: 300px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .container {
+      margin-bottom: 20px;
+    }
+    pre {
+      background-color: #f4f4f4;
+      padding: 10px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daily Menu Management</h1>
+
+  <div class="container">
+    <h2>Create Daily Menu</h2>
+    <form id="createMenuForm">
+      <input type="text" name="id" placeholder="ID" required>
+      <input type="text" name="breakfast" placeholder="Breakfast" required>
+      <input type="text" name="lunch" placeholder="Lunch" required>
+      <input type="text" name="snacks" placeholder="Snacks" required>
+      <input type="text" name="dinner" placeholder="Dinner" required>
+      <input type="text" name="day" placeholder="Day" required>
+      <button type="submit">Create Menu</button>
+    </form>
+  </div>
+
+  <div class="container">
+    <h2>View All Menus</h2>
+    <button id="viewMenusButton">View Menus</button>
+    <div id="menusContainer"></div>
+  </div>
+
+  <div class="container">
+    <h2>Update Daily Menu</h2>
+    <form id="updateMenuForm">
+      <input type="text" name="id" placeholder="ID" required>
+      <input type="text" name="breakfast" placeholder="Breakfast">
+      <input type="text" name="lunch" placeholder="Lunch">
+      <input type="text" name="snacks" placeholder="Snacks">
+      <input type="text" name="dinner" placeholder="Dinner">
+      <input type="text" name="day" placeholder="Day">
+      <button type="submit">Update Menu</button>
+    </form>
+  </div>
+
+  <div class="container">
+    <h2>Delete Daily Menu</h2>
+    <form id="deleteMenuForm">
+      <input type="text" name="id" placeholder="ID" required>
+      <button type="submit">Delete Menu</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('createMenuForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const response = await fetch('/menus', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        alert('Menu created: ' + JSON.stringify(result));
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while creating the menu.');
+      }
+    });
+
+    document.getElementById('viewMenusButton').addEventListener('click', async () => {
+      try {
+        const response = await fetch('/menus', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        const menusContainer = document.getElementById('menusContainer');
+        menusContainer.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while fetching the menus.');
+      }
+    });
+
+    document.getElementById('updateMenuForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const data = Object.fromEntries(formData.entries());
+      const id = data.id;
+      delete data.id;
+
+      try {
+        const response = await fetch(`/menus/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        alert('Menu updated: ' + JSON.stringify(result));
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while updating the menu.');
+      }
+    });
+
+    document.getElementById('deleteMenuForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const id = formData.get('id');
+
+      try {
+        const response = await fetch(`/menus/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        alert('Menu deleted: ' + JSON.stringify(result));
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while deleting the menu.');
+      }
+    });
+  </script>
+</body>
+</html>
