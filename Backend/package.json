@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "backend": "file:",
+    "cors": "^2.8.5",
     "express": "^4.21.2",
     "mongoose": "^8.10.1",
     "qrcode": "^1.5.4",

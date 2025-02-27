@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../axiosConfig';
+import { Container, TextField, Button, Typography, Box } from '@mui/material';
 
 const DeleteMenu = () => {
   const [id, setId] = useState('');
@@ -11,7 +12,7 @@ const DeleteMenu = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.delete(`/menus/${id}`);
+      const response = await axiosInstance.delete(`/daily-menus/${id}`);
       alert('Menu deleted: ' + JSON.stringify(response.data));
     } catch (error) {
       console.error('Error:', error);
@@ -20,10 +21,27 @@ const DeleteMenu = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input type="text" name="id" placeholder="ID" value={id} onChange={handleChange} required />
-      <button type="submit">Delete Menu</button>
-    </form>
+    <Container maxWidth="sm" style={{ marginTop: '50px' }}>
+      <Typography variant="h4" gutterBottom>
+        Delete Daily Menu
+      </Typography>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          label="ID"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          value={id}
+          onChange={handleChange}
+          required
+        />
+        <Box mt={2}>
+          <Button variant="contained" color="secondary" type="submit" fullWidth>
+            Delete Menu
+          </Button>
+        </Box>
+      </form>
+    </Container>
   );
 };
 

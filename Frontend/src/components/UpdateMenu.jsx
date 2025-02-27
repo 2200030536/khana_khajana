@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axiosInstance from '../axiosConfig';
+import { Container, TextField, Button, Typography, Box } from '@mui/material';
 
 const UpdateMenu = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ const UpdateMenu = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`/menus/${formData.id}`, formData);
+      const response = await axiosInstance.put(`/daily-menus/${formData.id}`, formData);
       alert('Menu updated: ' + JSON.stringify(response.data));
     } catch (error) {
       console.error('Error:', error);
@@ -27,15 +28,73 @@ const UpdateMenu = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input type="text" name="id" placeholder="ID" value={formData.id} onChange={handleChange} required />
-      <input type="text" name="breakfast" placeholder="Breakfast" value={formData.breakfast} onChange={handleChange} />
-      <input type="text" name="lunch" placeholder="Lunch" value={formData.lunch} onChange={handleChange} />
-      <input type="text" name="snacks" placeholder="Snacks" value={formData.snacks} onChange={handleChange} />
-      <input type="text" name="dinner" placeholder="Dinner" value={formData.dinner} onChange={handleChange} />
-      <input type="text" name="day" placeholder="Day" value={formData.day} onChange={handleChange} />
-      <button type="submit">Update Menu</button>
-    </form>
+    <Container maxWidth="sm" style={{ marginTop: '50px' }}>
+      <Typography variant="h4" gutterBottom>
+        Update Daily Menu
+      </Typography>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          label="ID"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="id"
+          value={formData.id}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          label="Breakfast"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="breakfast"
+          value={formData.breakfast}
+          onChange={handleChange}
+        />
+        <TextField
+          label="Lunch"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="lunch"
+          value={formData.lunch}
+          onChange={handleChange}
+        />
+        <TextField
+          label="Snacks"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="snacks"
+          value={formData.snacks}
+          onChange={handleChange}
+        />
+        <TextField
+          label="Dinner"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="dinner"
+          value={formData.dinner}
+          onChange={handleChange}
+        />
+        <TextField
+          label="Day"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="day"
+          value={formData.day}
+          onChange={handleChange}
+        />
+        <Box mt={2}>
+          <Button variant="contained" color="primary" type="submit" fullWidth>
+            Update Menu
+          </Button>
+        </Box>
+      </form>
+    </Container>
   );
 };
 
