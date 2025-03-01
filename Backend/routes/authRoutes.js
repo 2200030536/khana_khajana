@@ -9,9 +9,8 @@ const router = express.Router();
 router.post('/login', async (req, res) => {
   try {
     const { email, password, userType } = req.body;
-
     let user;
-    if (userType === 'messUser') {
+    if (userType === 'messUsers') {
       user = await MessUser.findOne({ email, password });
     } else if (userType === 'studentUser') {
       user = await StudentUser.findOne({ email, password });

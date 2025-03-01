@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import axiosInstance from '../axiosConfig';
-import { Container, TextField, Button, Typography, Box, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { Container, TextField, Button, Typography, Box } from '@mui/material';
 
-const Login = () => {
+const MessUserSignup = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    name: '',
+    id: '',
     password: '',
-    userType: ''
+    email: ''
   });
 
   const handleChange = (e) => {
@@ -16,27 +17,37 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.post('/auth/login', formData);
-      alert('Login successful: ' + JSON.stringify(response.data));
+      const response = await axiosInstance.post('/messUsers', formData);
+      alert('Signup successful: ' + JSON.stringify(response.data));
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while logging in.');
+      alert('An error occurred while signing up.');
     }
   };
 
   return (
     <Container maxWidth="sm" style={{ marginTop: '50px' }}>
       <Typography variant="h4" gutterBottom>
-        Login
+        Mess User Signup
       </Typography>
       <form onSubmit={handleSubmit}>
         <TextField
-          label="Email"
+          label="Name"
           variant="outlined"
           fullWidth
           margin="normal"
-          name="email"
-          value={formData.email}
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+        <TextField
+          label="ID"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="id"
+          value={formData.id}
           onChange={handleChange}
           required
         />
@@ -51,23 +62,19 @@ const Login = () => {
           onChange={handleChange}
           required
         />
-        <FormControl variant="outlined" fullWidth margin="normal" required>
-          <InputLabel id="userType-label">User Type</InputLabel>
-          <Select
-            labelId="userType-label"
-            label="User Type"
-            name="userType"
-            value={formData.userType}
-            onChange={handleChange}
-          >
-            <MenuItem value="messUser">Mess User</MenuItem>
-            <MenuItem value="studentUser">Student User</MenuItem>
-            <MenuItem value="admin">Admin</MenuItem>
-          </Select>
-        </FormControl>
+        <TextField
+          label="Email"
+          variant="outlined"
+          fullWidth
+          margin="normal"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+        />
         <Box mt={2}>
           <Button variant="contained" color="primary" type="submit" fullWidth>
-            Login
+            Signup
           </Button>
         </Box>
       </form>
@@ -75,4 +82,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default MessUserSignup;

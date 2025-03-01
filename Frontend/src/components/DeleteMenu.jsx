@@ -12,7 +12,7 @@ const DeleteMenu = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosInstance.delete(`/daily-menus/${id}`);
+      const response = await axiosInstance.delete(`/menus/${id}`);
       alert('Menu deleted: ' + JSON.stringify(response.data));
     } catch (error) {
       console.error('Error:', error);

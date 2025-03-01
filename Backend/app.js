@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from 'cors'; // Import the cors package
 import connectDB from './server/connect.mjs';
 import messUserRoutes from './routes/messUserRoutes.js';
 import studentUserRoutes from './routes/studentUserRoutes.js';
@@ -14,6 +15,9 @@ const port = 3001;
 
 // Connect to MongoDB
 connectDB();
+
+// Enable CORS
+app.use(cors());
 
 // Middleware to parse JSON bodies
 app.use(express.json());

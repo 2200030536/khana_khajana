@@ -4,8 +4,12 @@ import CreateMenu from './components/CreateMenu';
 import ViewMenus from './components/ViewMenus';
 import UpdateMenu from './components/UpdateMenu';
 import DeleteMenu from './components/DeleteMenu';
+import MenuCrud from './components/MenuCrud';
 import Home from './Home';
 import Login from './components/Login';
+import Signup from './components/Signup';
+import StudentSignup from './components/StudentUserSignup';
+import MessUserSignup from './components/MessUserSignup';
 import './App.css';
 
 const App = () => {
@@ -14,6 +18,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/student-signup" element={<StudentSignup />} />
+        <Route path="/messuser-signup" element={<MessUserSignup />} />
+        <Route path="/menu-crud" element={<MenuCrud />} />
         <Route path="/create-menu" element={<CreateMenu />} />
         <Route path="/view-menus" element={<ViewMenus />} />
         <Route path="/update-menu" element={<UpdateMenu />} />
