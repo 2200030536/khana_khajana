@@ -10,6 +10,7 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import StudentSignup from './components/StudentUserSignup';
 import MessUserSignup from './components/MessUserSignup';
+import Profile from './components/Profile';
 import './App.css';
 
 const App = () => {
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/student-signup" element={<StudentSignup />} />
         <Route path="/messuser-signup" element={<MessUserSignup />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/menu-crud" element={<MenuCrud />} />
         <Route path="/create-menu" element={<CreateMenu />} />
         <Route path="/view-menus" element={<ViewMenus />} />

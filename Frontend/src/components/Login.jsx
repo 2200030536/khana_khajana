@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axiosInstance from '../axiosConfig';
 import { Container, TextField, Button, Typography, Box, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -8,6 +9,8 @@ const Login = () => {
     password: '',
     userType: ''
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,6 +21,7 @@ const Login = () => {
     try {
       const response = await axiosInstance.post('/auth/login', formData);
       alert('Login successful: ' + JSON.stringify(response.data));
+      navigate('/profile'); // Redirect to profile page
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while logging in.');

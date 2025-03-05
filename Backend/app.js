@@ -1,14 +1,15 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import cors from 'cors'; // Import the cors package
+import cors from 'cors';
+import session from 'express-session';
 import connectDB from './server/connect.mjs';
 import messUserRoutes from './routes/messUserRoutes.js';
 import studentUserRoutes from './routes/studentUserRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import studentTransactionRoutes from './routes/studentTransaction.js'; // Ensure correct import
+import studentTransactionRoutes from './routes/studentTransaction.js';
 import dailyMenuRoutes from './routes/dailyMenuRoutes.js';
-import authRoutes from './routes/authRoutes.js'; // Import the auth routes
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 const port = 3001;
@@ -17,7 +18,18 @@ const port = 3001;
 connectDB();
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Adjust the origin as needed
+  credentials: true // Allow credentials (cookies) to be sent
+}));
+
+// Configure session middleware
+app.use(session({
+  secret: 'krishna', // Replace with your own secret key
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // Set to true if using HTTPS
+}));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -33,8 +45,7 @@ app.use('/students', studentUserRoutes);
 app.use('/admins', adminRoutes);
 app.use('/transactions', studentTransactionRoutes);
 app.use('/menus', dailyMenuRoutes);
-app.use('/auth', authRoutes); // Use the auth routes
-app.use('/api/student-transactions', studentTransactionRoutes); // Ensure correct route
+app.use('/auth', authRoutes);
 
 // Serve the HTML file
 const __filename = fileURLToPath(import.meta.url);
