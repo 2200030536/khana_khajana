@@ -46,6 +46,7 @@ app.use('/admins', adminRoutes);
 app.use('/transactions', studentTransactionRoutes);
 app.use('/menus', dailyMenuRoutes);
 app.use('/auth', authRoutes);
+app.use('/api/daily-menus', dailyMenuRoutes);
 
 // Serve the HTML file
 const __filename = fileURLToPath(import.meta.url);
