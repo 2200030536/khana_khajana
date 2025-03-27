@@ -48,8 +48,14 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      alert('Login successful: ' + JSON.stringify(response.data));
-      navigate('/profile'); // Redirect to profile page
+      // alert('Login successful: ' + JSON.stringify(response.data));
+      if (formData.userType=="messUser"){
+        navigate('/messUserDashboard');
+      }else if(formData.userType=="studentUser"){
+        navigate('/profile'); // Redirect to profile page
+      }else if(formData.userType=="admin"){
+        navigate("/adminDashboard")
+      }
     } catch (error) {
       console.error('Error:', error);
       alert('An error occurred while logging in.');
