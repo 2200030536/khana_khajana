@@ -11,6 +11,8 @@ import Signup from './pages/Signup';
 import StudentSignup from './components/StudentUserSignup';
 import MessUserSignup from './components/MessUserSignup';
 import Profile from './components/Profile';
+import MessUser from './pages/Mess User/MessUser';
+import AdminUser from './pages/Admin User/AdminUser';
 import './App.css';
 
 const App = () => {
@@ -28,6 +30,11 @@ const App = () => {
         <Route path="/view-menus" element={<ViewMenus />} />
         <Route path="/update-menu" element={<UpdateMenu />} />
         <Route path="/delete-menu" element={<DeleteMenu />} />
+        {/* mess user dashboard */}
+        <Route path="/messDashboard" element={<MessUser/>}></Route>
+        {/* admin dashboard */}
+        <Route path="/adminDashboard" element={<AdminUser/>}></Route>
+
       </Routes>
     </BrowserRouter>
   );
