@@ -22,7 +22,7 @@ function MessUser() {
       <div className="w-4/5">
         {/* Header */}
         <div className="bg-gray-300 p-4 flex justify-between">
-          <h1 className="text-lg font-bold">Admin Dashboard</h1>
+          <h1 className="text-lg font-bold">Mess Dashboard</h1>
           <div className="flex items-center">
             <span className="mr-4">id institute</span>
             <div className="w-10 h-10 bg-gray-500 rounded-full"></div>
