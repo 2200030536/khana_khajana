@@ -1,10 +1,13 @@
 import React from 'react';
 import { AppBar, Toolbar, Typography, Menu, MenuItem, IconButton } from '@mui/material';
 import AccountCircle from '@mui/icons-material/AccountCircle';
+import axiosInstance from '../axiosConfig'; // Import axios instance
+import { useNavigate } from 'react-router-dom'; // For navigation after logout
 import './ProfileNavbar.css'; // Import the CSS file
 
 const ProfileNavbar = ({ user }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const navigate = useNavigate(); // Initialize navigation
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -12,6 +15,17 @@ const ProfileNavbar = ({ user }) => {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post('/auth/logout'); // Call the logout API
+      alert('Logout successful');
+      navigate('/login'); // Redirect to the login page
+    } catch (error) {
+      console.error('Error during logout:', error);
+      alert('Failed to logout. Please try again.');
+    }
   };
 
   return (
@@ -56,7 +70,7 @@ const ProfileNavbar = ({ user }) => {
           >
             <MenuItem onClick={handleClose}>Profile Details</MenuItem>
             <MenuItem onClick={handleClose}>Update Profile</MenuItem>
-            <MenuItem onClick={handleClose}>Logout</MenuItem>
+            <MenuItem onClick={handleLogout}>Logout</MenuItem>
           </Menu>
         </div>
       </Toolbar>
