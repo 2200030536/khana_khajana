@@ -7,7 +7,7 @@ import connectDB from './server/connect.mjs';
 import messUserRoutes from './routes/messUserRoutes.js';
 import studentUserRoutes from './routes/studentUserRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
-import studentTransactionRoutes from './routes/studentTransaction.js';
+import studentTransactionRoutes from './routes/studentTransactionRoutes.js';
 import dailyMenuRoutes from './routes/dailyMenuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 

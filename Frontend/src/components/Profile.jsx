@@ -7,15 +7,43 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [menus, setMenus] = useState([]);
   const [showWeeklyMenu, setShowWeeklyMenu] = useState(false);
+  const [transactionStatus, setTransactionStatus] = useState(null); // To store transaction status
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await axiosInstance.get('/auth/profile');
         setUser(response.data.user);
+        console.log('User:', response.data.user); // Debugging log
+
+        // If the user is a student, fetch transaction data
+        if (response.data.user.userType === 'studentUser') {
+          const transactionResponse = await axiosInstance.get(`/transactions/student/${response.data.user.id}`);
+          console.log('Transaction Response:', transactionResponse.data); // Debugging log
+          const studentTransaction = transactionResponse;
+          console.log(' Response:', studentTransaction);
+          
+
+          if (transactionResponse) {
+            const currentDate = new Date();
+            const endDate = new Date(studentTransaction.endDate);
+
+            // Check if the end date is under the current date
+            if (endDate >= currentDate) {
+              setTransactionStatus('available');
+              console.log('Transaction Status:', transactionStatus);
+            } else {
+              setTransactionStatus('apply');
+              console.log('Transaction Status:', transactionStatus);
+            }
+          } else {
+            setTransactionStatus('apply');
+            console.log('Transaction Status:', transactionStatus);
+          }
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error);
-        alert('An error occurred while fetching the profile.');
+        console.error('Error fetching profile or transactions:', error);
+        alert('An error occurred while fetching data.');
       }
     };
 
@@ -49,6 +77,8 @@ const Profile = () => {
   if (!user) {
     return <Typography>Loading...</Typography>;
   }
+
+  console.log('Transaction Status:', transactionStatus); // Debugging log
 
   return (
     <>
@@ -123,6 +153,19 @@ const Profile = () => {
               </Button>
               <Button variant="contained" color="secondary">Browse Plans</Button>
             </Box>
+            {user.userType === 'student' && (
+              <Box mt={3}>
+                {transactionStatus === 'available' ? (
+                  <Button variant="contained" color="success">
+                    Available
+                  </Button>
+                ) : (
+                  <Button variant="contained" color="warning">
+                    Apply
+                  </Button>
+                )}
+              </Box>
+            )}
           </Grid>
         </Grid>
       </Container>

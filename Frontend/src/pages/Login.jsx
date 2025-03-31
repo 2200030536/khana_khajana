@@ -50,7 +50,7 @@ const Login = () => {
       const response = await axiosInstance.post('/auth/login', formData);
       // alert('Login successful: ' + JSON.stringify(response.data));
       if (formData.userType=="messUser"){
-        navigate('/messUserDashboard');
+        navigate('/messDashboard');
       }else if(formData.userType=="studentUser"){
         navigate('/profile'); // Redirect to profile page
       }else if(formData.userType=="admin"){
