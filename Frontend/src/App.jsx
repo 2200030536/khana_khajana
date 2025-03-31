@@ -14,6 +14,12 @@ import Profile from './components/Profile';
 import MessUser from './pages/Mess User/MessUser';
 import AdminUser from './pages/Admin User/AdminUser';
 import './App.css';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Menu from './pages/Menu';
+
+
+
 
 const App = () => {
   return (
@@ -34,6 +40,12 @@ const App = () => {
         <Route path="/messDashboard" element={<MessUser/>}></Route>
         {/* admin dashboard */}
         <Route path="/adminDashboard" element={<AdminUser/>}></Route>
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/menu" element={<Menu />} />
+
+
+
 
       </Routes>
     </BrowserRouter>

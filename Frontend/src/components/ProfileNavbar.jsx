@@ -1,13 +1,12 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Menu, MenuItem, IconButton } from '@mui/material';
+import { AppBar, Toolbar, Typography, Menu, MenuItem, IconButton, Box } from '@mui/material';
 import AccountCircle from '@mui/icons-material/AccountCircle';
-import axiosInstance from '../axiosConfig'; // Import axios instance
-import { useNavigate } from 'react-router-dom'; // For navigation after logout
-import './ProfileNavbar.css'; // Import the CSS file
+import axiosInstance from '../axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 const ProfileNavbar = ({ user }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
-  const navigate = useNavigate(); // Initialize navigation
+  const navigate = useNavigate();
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -19,9 +18,9 @@ const ProfileNavbar = ({ user }) => {
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post('/auth/logout'); // Call the logout API
+      await axiosInstance.post('/auth/logout');
       alert('Logout successful');
-      navigate('/login'); // Redirect to the login page
+      navigate('/login');
     } catch (error) {
       console.error('Error during logout:', error);
       alert('Failed to logout. Please try again.');
@@ -29,19 +28,24 @@ const ProfileNavbar = ({ user }) => {
   };
 
   return (
-    <AppBar position="static" className="navbar">
-      <Toolbar>
-        <Typography variant="h6" className="navbar-title">
-          {user.name}
-        </Typography>
-        {user.userType === 'student' && (
-          <Typography variant="h6" className="navbar-id">
-            ID: {user.id}
+    <AppBar position="sticky" className="bg-gradient-to-r from-orange-400 to-orange-600 shadow-lg">
+      <Toolbar className="flex justify-between">
+        {/* Left Section */}
+        <Box className="flex items-center space-x-4">
+          <Typography variant="h6" className="text-white font-bold">
+            Welcome, {user.name}
           </Typography>
-        )}
-        <Typography variant="h6" className="navbar-userType">
-          {user.userType}
-        </Typography>
+          {user.userType === 'student' && (
+            <Typography variant="body1" className="text-white">
+              ID: {user.id}
+            </Typography>
+          )}
+          <Typography variant="body1" className="text-white capitalize">
+            ({user.userType})
+          </Typography>
+        </Box>
+
+        {/* Right Section */}
         <div>
           <IconButton
             edge="end"
@@ -49,9 +53,9 @@ const ProfileNavbar = ({ user }) => {
             aria-controls="menu-appbar"
             aria-haspopup="true"
             onClick={handleMenu}
-            color="inherit"
+            className="text-white"
           >
-            <AccountCircle />
+            <AccountCircle fontSize="large" />
           </IconButton>
           <Menu
             id="menu-appbar"
