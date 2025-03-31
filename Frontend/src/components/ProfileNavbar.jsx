@@ -1,8 +1,16 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, Menu, MenuItem, IconButton, Box } from '@mui/material';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import axiosInstance from '../axiosConfig';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Menu,
+  MenuItem,
+  IconButton,
+  Box,
+} from "@mui/material";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import axiosInstance from "../axiosConfig";
+import { useNavigate } from "react-router-dom";
 
 const ProfileNavbar = ({ user }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -18,29 +26,57 @@ const ProfileNavbar = ({ user }) => {
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post('/auth/logout');
-      alert('Logout successful');
-      navigate('/login');
+      await axiosInstance.post("/auth/logout");
+      alert("Logout successful");
+      navigate("/login");
     } catch (error) {
-      console.error('Error during logout:', error);
-      alert('Failed to logout. Please try again.');
+      console.error("Error during logout:", error);
+      alert("Failed to logout. Please try again.");
     }
   };
 
   return (
-    <AppBar position="sticky" className="bg-gradient-to-r from-orange-400 to-orange-600 shadow-lg">
-      <Toolbar className="flex justify-between">
+    <AppBar
+      position="sticky"
+      style={{
+        background: "linear-gradient(135deg, #f57c00, #ef6c00)", // Gradient background
+        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)", // Subtle shadow
+      }}
+    >
+      <Toolbar style={{ display: "flex", justifyContent: "space-between" }}>
         {/* Left Section */}
-        <Box className="flex items-center space-x-4">
-          <Typography variant="h6" className="text-white font-bold">
+        <Box style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <Typography
+            variant="h6"
+            style={{
+              color: "#fff",
+              fontWeight: "bold",
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)",
+            }}
+          >
             Welcome, {user.name}
           </Typography>
-          {user.userType === 'student' && (
-            <Typography variant="body1" className="text-white">
+          {user.userType === "student" && (
+            <Typography
+              variant="body1"
+              style={{
+                color: "#fff",
+                fontWeight: "500",
+                textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)",
+              }}
+            >
               ID: {user.id}
             </Typography>
           )}
-          <Typography variant="body1" className="text-white capitalize">
+          <Typography
+            variant="body1"
+            style={{
+              color: "#fff",
+              fontWeight: "500",
+              textTransform: "capitalize",
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.3)",
+            }}
+          >
             ({user.userType})
           </Typography>
         </Box>
@@ -53,7 +89,12 @@ const ProfileNavbar = ({ user }) => {
             aria-controls="menu-appbar"
             aria-haspopup="true"
             onClick={handleMenu}
-            className="text-white"
+            style={{
+              color: "#fff",
+              transition: "transform 0.3s ease",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
             <AccountCircle fontSize="large" />
           </IconButton>
@@ -61,13 +102,13 @@ const ProfileNavbar = ({ user }) => {
             id="menu-appbar"
             anchorEl={anchorEl}
             anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
+              vertical: "top",
+              horizontal: "right",
             }}
             keepMounted
             transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
+              vertical: "top",
+              horizontal: "right",
             }}
             open={Boolean(anchorEl)}
             onClose={handleClose}

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import axiosInstance from '../axiosConfig';
+import React, { useEffect, useState } from "react";
+import axiosInstance from "../axiosConfig";
 import {
   Container,
   Typography,
@@ -13,8 +13,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-} from '@mui/material';
-import ProfileNavbar from './ProfileNavbar';
+} from "@mui/material";
+import ProfileNavbar from "./ProfileNavbar";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -25,10 +25,10 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axiosInstance.get('/auth/profile');
+        const response = await axiosInstance.get("/auth/profile");
         setUser(response.data.user);
 
-        if (response.data.user.userType === 'studentUser') {
+        if (response.data.user.userType === "studentUser") {
           const transactionResponse = await axiosInstance.get(
             `/transactions/student/${response.data.user.id}`
           );
@@ -39,27 +39,27 @@ const Profile = () => {
             const endDate = new Date(studentTransaction.endDate);
 
             if (endDate >= currentDate) {
-              setTransactionStatus('available');
+              setTransactionStatus("available");
             } else {
-              setTransactionStatus('apply');
+              setTransactionStatus("apply");
             }
           } else {
-            setTransactionStatus('apply');
+            setTransactionStatus("apply");
           }
         }
       } catch (error) {
-        console.error('Error fetching profile or transactions:', error);
-        alert('An error occurred while fetching data.');
+        console.error("Error fetching profile or transactions:", error);
+        alert("An error occurred while fetching data.");
       }
     };
 
     const fetchMenus = async () => {
       try {
-        const response = await axiosInstance.get('/menus');
+        const response = await axiosInstance.get("/menus");
         setMenus(response.data);
       } catch (error) {
-        console.error('Error fetching menus:', error);
-        alert('An error occurred while fetching the menus.');
+        console.error("Error fetching menus:", error);
+        alert("An error occurred while fetching the menus.");
       }
     };
 
@@ -69,16 +69,16 @@ const Profile = () => {
 
   const getDayName = (day) => {
     const days = [
-      'Sunday',
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Specials',
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Specials",
     ];
-    return days[day - 1] || 'Invalid day';
+    return days[day - 1] || "Invalid day";
   };
 
   const getCurrentDayMenu = () => {
@@ -101,58 +101,119 @@ const Profile = () => {
   return (
     <>
       <ProfileNavbar user={user} />
-      <Container maxWidth="lg" className="mt-6">
+      <Container maxWidth="lg" style={{ marginTop: "20px" }}>
         <Grid container spacing={3}>
           {/* Sidebar */}
           <Grid item xs={12} sm={3}>
             <Paper
               elevation={3}
-              className="p-5 bg-gradient-to-b from-amber-50 to-orange-50 shadow-lg rounded-lg h-full"
+              style={{
+                padding: "20px",
+                background: "linear-gradient(to bottom, #fff8e1, #ffe0b2)",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                borderRadius: "8px",
+              }}
             >
               <Typography
                 variant="h6"
-                className="text-amber-700 font-bold text-center mb-4"
+                style={{
+                  color: "#f57c00",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  marginBottom: "16px",
+                }}
               >
                 Your Plan Status
               </Typography>
-              <div className="text-center mb-6">
-                {transactionStatus === 'available' ? (
+              <div style={{ textAlign: "center", marginBottom: "24px" }}>
+                {transactionStatus === "available" ? (
                   <Button
                     variant="contained"
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg shadow-md transition duration-300"
+                    style={{
+                      backgroundColor: "#4caf50",
+                      color: "#fff",
+                      padding: "10px 20px",
+                      borderRadius: "8px",
+                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                    }}
                   >
                     Active Plan
                   </Button>
                 ) : (
                   <Button
                     variant="contained"
-                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg shadow-md transition duration-300"
+                    style={{
+                      backgroundColor: "#f44336",
+                      color: "#fff",
+                      padding: "10px 20px",
+                      borderRadius: "8px",
+                      boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                    }}
                   >
                     Apply Now
                   </Button>
                 )}
               </div>
-              <ul className="space-y-4">
-                <li>
+              <ul style={{ listStyle: "none", padding: "0" }}>
+                <li style={{ marginBottom: "12px" }}>
                   <Button
                     variant="text"
-                    className="w-full text-left text-gray-700 hover:text-amber-700 hover:bg-amber-100 px-4 py-2 rounded-lg transition duration-300"
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      color: "#616161",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#ffe0b2")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     Dashboard
                   </Button>
                 </li>
-                <li>
+                <li style={{ marginBottom: "12px" }}>
                   <Button
                     variant="text"
-                    className="w-full text-left text-gray-700 hover:text-amber-700 hover:bg-amber-100 px-4 py-2 rounded-lg transition duration-300"
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      color: "#616161",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#ffe0b2")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     Edit Profile
                   </Button>
                 </li>
-                <li>
+                <li style={{ marginBottom: "12px" }}>
                   <Button
                     variant="text"
-                    className="w-full text-left text-gray-700 hover:text-amber-700 hover:bg-amber-100 px-4 py-2 rounded-lg transition duration-300"
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      color: "#616161",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#ffe0b2")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     Transactions
                   </Button>
@@ -160,7 +221,20 @@ const Profile = () => {
                 <li>
                   <Button
                     variant="text"
-                    className="w-full text-left text-gray-700 hover:text-amber-700 hover:bg-amber-100 px-4 py-2 rounded-lg transition duration-300"
+                    style={{
+                      width: "100%",
+                      textAlign: "left",
+                      color: "#616161",
+                      padding: "10px",
+                      borderRadius: "8px",
+                      transition: "all 0.3s ease",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#ffe0b2")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "transparent")
+                    }
                   >
                     Weekly Menu
                   </Button>
@@ -173,56 +247,75 @@ const Profile = () => {
           <Grid item xs={12} sm={9}>
             <Paper
               elevation={3}
-              className="p-5 bg-white shadow-lg rounded-lg border-t-4 border-amber-500"
+              style={{
+                padding: "20px",
+                backgroundColor: "#ffffff",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                borderRadius: "8px",
+                borderTop: "4px solid #f57c00",
+              }}
             >
               <Typography
                 variant="h4"
-                gutterBottom
-                className="text-amber-700 font-bold"
+                style={{
+                  color: "#f57c00",
+                  fontWeight: "bold",
+                  marginBottom: "16px",
+                }}
               >
                 Profile
               </Typography>
-              <Box mt={2}>
-                <Typography variant="h6" className="text-gray-700">
-                  Name: <span className="font-medium">{user.name}</span>
+              <Box>
+                <Typography variant="h6" style={{ color: "#616161" }}>
+                  Name: <span style={{ fontWeight: "500" }}>{user.name}</span>
                 </Typography>
-                <Typography variant="h6" className="text-gray-700">
-                  Email: <span className="font-medium">{user.email}</span>
+                <Typography variant="h6" style={{ color: "#616161" }}>
+                  Email: <span style={{ fontWeight: "500" }}>{user.email}</span>
                 </Typography>
-                <Typography variant="h6" className="text-gray-700">
-                  User Type: <span className="font-medium">{user.userType}</span>
+                <Typography variant="h6" style={{ color: "#616161" }}>
+                  User Type:{" "}
+                  <span style={{ fontWeight: "500" }}>{user.userType}</span>
                 </Typography>
               </Box>
             </Paper>
 
             <Paper
               elevation={3}
-              className="p-5 mt-5 bg-gradient-to-b from-orange-50 to-amber-50 shadow-lg rounded-lg"
+              style={{
+                padding: "20px",
+                marginTop: "20px",
+                background: "linear-gradient(to bottom, #fff8e1, #ffe0b2)",
+                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
+                borderRadius: "8px",
+              }}
             >
               <Typography
                 variant="h5"
-                gutterBottom
-                className="text-amber-700 font-bold"
+                style={{
+                  color: "#f57c00",
+                  fontWeight: "bold",
+                  marginBottom: "16px",
+                }}
               >
-                {showWeeklyMenu ? 'Weekly Menu' : "Today's Menu"}
+                {showWeeklyMenu ? "Weekly Menu" : "Today's Menu"}
               </Typography>
-              <TableContainer component={Paper} className="shadow-md">
+              <TableContainer component={Paper}>
                 <Table>
-                  <TableHead className="bg-amber-100">
+                  <TableHead style={{ backgroundColor: "#ffe0b2" }}>
                     <TableRow>
-                      <TableCell className="font-bold text-gray-700">
+                      <TableCell style={{ fontWeight: "bold", color: "#616161" }}>
                         Day
                       </TableCell>
-                      <TableCell className="font-bold text-gray-700">
+                      <TableCell style={{ fontWeight: "bold", color: "#616161" }}>
                         Breakfast
                       </TableCell>
-                      <TableCell className="font-bold text-gray-700">
+                      <TableCell style={{ fontWeight: "bold", color: "#616161" }}>
                         Lunch
                       </TableCell>
-                      <TableCell className="font-bold text-gray-700">
+                      <TableCell style={{ fontWeight: "bold", color: "#616161" }}>
                         Snacks
                       </TableCell>
-                      <TableCell className="font-bold text-gray-700">
+                      <TableCell style={{ fontWeight: "bold", color: "#616161" }}>
                         Dinner
                       </TableCell>
                     </TableRow>
@@ -230,10 +323,7 @@ const Profile = () => {
                   <TableBody>
                     {showWeeklyMenu ? (
                       menus.map((menu) => (
-                        <TableRow
-                          key={menu.id}
-                          className="hover:bg-amber-50 transition duration-300"
-                        >
+                        <TableRow key={menu.day}>
                           <TableCell>{getDayName(menu.day)}</TableCell>
                           <TableCell>{menu.breakfast}</TableCell>
                           <TableCell>{menu.lunch}</TableCell>
@@ -243,10 +333,8 @@ const Profile = () => {
                       ))
                     ) : (
                       currentDayMenu && (
-                        <TableRow className="hover:bg-amber-50 transition duration-300">
-                          <TableCell>
-                            {getDayName(currentDayMenu.day)}
-                          </TableCell>
+                        <TableRow>
+                          <TableCell>{getDayName(currentDayMenu.day)}</TableCell>
                           <TableCell>{currentDayMenu.breakfast}</TableCell>
                           <TableCell>{currentDayMenu.lunch}</TableCell>
                           <TableCell>{currentDayMenu.snacks}</TableCell>
@@ -263,18 +351,30 @@ const Profile = () => {
               mt={3}
               display="flex"
               justifyContent="space-between"
-              className="animate-fade-in"
+              style={{ animation: "fade-in 0.3s ease" }}
             >
               <Button
                 variant="contained"
-                className="bg-amber-600 hover:bg-amber-700 text-white px-6 py-2 rounded-lg shadow-md transition duration-300"
+                style={{
+                  backgroundColor: "#f57c00",
+                  color: "#fff",
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                }}
                 onClick={() => setShowWeeklyMenu(!showWeeklyMenu)}
               >
-                {showWeeklyMenu ? "Today's Menu" : 'Weekly Menu'}
+                {showWeeklyMenu ? "Today's Menu" : "Weekly Menu"}
               </Button>
               <Button
                 variant="contained"
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md transition duration-300"
+                style={{
+                  backgroundColor: "#2196f3",
+                  color: "#fff",
+                  padding: "10px 20px",
+                  borderRadius: "8px",
+                  boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                }}
               >
                 Browse Plans
               </Button>
