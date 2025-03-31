@@ -1,178 +1,74 @@
 import React from 'react';
-import { 
-  Container, 
-  Button, 
-  Typography, 
-  Box, 
-  Paper, 
-  Avatar, 
-  Divider,
-  useTheme,
-  useMediaQuery
-} from '@mui/material';
 import { Link } from 'react-router-dom';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import SchoolIcon from '@mui/icons-material/School';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
+import Navbar from '../components/Navbar';
 
 const Signup = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   return (
-    <Container 
-      maxWidth="sm" 
-      sx={{ 
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        padding: isMobile ? '20px' : 0
-      }}
-    >
-      <Paper 
-        elevation={10} 
-        sx={{ 
-          padding: '40px',
-          width: '100%',
-          borderRadius: '16px',
-          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)'
-        }}
-      >
-        <Box
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mb: 5
-          }}
-        >
-          <Avatar 
-            sx={{ 
-              m: 1, 
-              bgcolor: 'primary.main',
-              width: 64,
-              height: 64
-            }}
-          >
-            <PersonAddIcon fontSize="large" />
-          </Avatar>
-          <Typography 
-            variant="h4" 
-            fontWeight="600" 
-            sx={{ 
-              color: 'primary.main',
-              mt: 2,
-              fontFamily: '"Poppins", sans-serif',
-              letterSpacing: '0.5px'
-            }}
-          >
-            Signup
-          </Typography>
-          <Divider 
-            sx={{ 
-              width: '50px', 
-              height: '4px', 
-              backgroundColor: 'primary.main',
-              mt: 1,
-              mb: 3,
-              borderRadius: '2px'
-            }} 
-          />
-          <Typography 
-            variant="subtitle1" 
-            align="center" 
-            color="textSecondary" 
-            sx={{ mb: 3 }}
-          >
-            Choose your account type to get started
-          </Typography>
-        </Box>
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-50">
+      <Navbar />
+      
+      <div className="flex justify-center items-center min-h-[calc(100vh-64px)] px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-xl shadow-lg p-8 border-t-4 border-amber-500">
+            <div className="flex flex-col items-center mb-8">
+              {/* Person Add Icon */}
+              <div className="w-16 h-16 rounded-full bg-amber-600 flex items-center justify-center text-white mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
+                </svg>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-amber-700">Signup</h2>
+              
+              <div className="w-12 h-1 bg-amber-300 rounded mt-2 mb-4"></div>
+              
+              <p className="text-gray-600 text-center mb-4">
+                Choose your account type to get started
+              </p>
+            </div>
 
-        <Box 
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
-          }}
-        >
-          <Button
-            variant="contained"
-            color="primary"
-            component={Link}
-            to="/student-signup"
-            fullWidth
-            size="large"
-            startIcon={<SchoolIcon />}
-            sx={{
-              borderRadius: '10px',
-              padding: '14px',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              textTransform: 'none',
-              boxShadow: '0 8px 16px rgba(25, 118, 210, 0.3)',
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 12px 20px rgba(25, 118, 210, 0.4)',
-              },
-            }}
-          >
-            Student Signup
-          </Button>
+            <div className="space-y-4">
+              {/* Student Signup Button */}
+              <Link 
+                to="/student-signup" 
+                className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                </svg>
+                Student Signup
+              </Link>
+              
+              {/* Mess User Signup Button */}
+              <Link 
+                to="/messuser-signup" 
+                className="flex items-center justify-center gap-3 w-full py-4 px-6 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 6a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+                Mess User Signup
+              </Link>
+            </div>
+            
+            {/* Login Link */}
+            <div className="text-center mt-8">
+              <p className="text-gray-600">
+                Already have an account?{' '}
+                <Link to="/login" className="text-amber-600 font-semibold hover:underline">
+                  Log in
+                </Link>
+              </p>
+            </div>
+          </div>
           
-          <Button
-            variant="contained"
-            color="primary"
-            component={Link}
-            to="/messuser-signup"
-            fullWidth
-            size="large"
-            startIcon={<RestaurantIcon />}
-            sx={{
-              borderRadius: '10px',
-              padding: '14px',
-              fontSize: '1.1rem',
-              fontWeight: 'bold',
-              textTransform: 'none',
-              boxShadow: '0 8px 16px rgba(25, 118, 210, 0.3)',
-              transition: 'all 0.2s ease-in-out',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 12px 20px rgba(25, 118, 210, 0.4)',
-              },
-            }}
-          >
-            Mess User Signup
-          </Button>
-        </Box>
-        
-        <Box 
-          mt={4} 
-          display="flex" 
-          justifyContent="center"
-        >
-          <Typography variant="body2" color="textSecondary">
-            Already have an account?{' '}
-            <Typography 
-              component={Link} 
-              to="/login"
-              color="primary" 
-              sx={{ 
-                fontWeight: 'bold',
-                textDecoration: 'none',
-                '&:hover': {
-                  textDecoration: 'underline'
-                }
-              }}
-            >
-              Log in
-            </Typography>
-          </Typography>
-        </Box>
-      </Paper>
-    </Container>
+          {/* Simple footer without date/time or user info */}
+          <div className="text-center mt-6 text-gray-500 text-xs">
+            <p>© 2025 Khana Khajana - Your daily mess companion</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
