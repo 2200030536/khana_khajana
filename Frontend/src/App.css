@@ -1,7 +1,7 @@
 @import "tailwindcss";
 /* filepath: s:\github\khana_khajana\Frontend\src\index.css */
 body {
-    @apply bg-[url('/src/assets/images/pattern-bg.png')] bg-repeat bg-cover bg-center;
+    @apply bg-[url('/src/assets/images/pattern-bg.png')] bg-cover bg-fixed bg-top;
     margin: 0;
     padding: 0;
   }

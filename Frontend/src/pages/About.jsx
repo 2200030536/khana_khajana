@@ -4,7 +4,6 @@ import Navbar from '../components/Navbar';
 const About = () => {
     return (
         <div
-            className="min-h-screen bg-[url('/src/assets/images/pattern-bg.png')] bg-cover bg-fixed bg-top"
 
         >
             <Navbar />

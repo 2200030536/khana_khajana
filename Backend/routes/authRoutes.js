@@ -17,18 +17,29 @@ router.use(session({
 // Login route for all user types
 router.post('/login', async (req, res) => {
   try {
-    const { email, password, userType } = req.body;
-    let user;
-    if (userType === 'messUser') {
-      user = await MessUser.findOne({ email, password });
-    } else if (userType === 'studentUser') {
-      user = await StudentUser.findOne({ email, password });
-    } else if (userType === 'admin') {
-      user = await Admin.findOne({ email, password });
+    const { email, password } = req.body;
+    let user = null;
+    let userType = null;
+
+    // Check in StudentUser table
+    user = await StudentUser.findOne({ email, password });
+    if (user) {
+      userType = 'studentUser';
     } else {
-      return res.status(400).json({ error: 'Invalid user type' });
+      // Check in MessUser table
+      user = await MessUser.findOne({ email, password });
+      if (user) {
+        userType = 'messUser';
+      } else {
+        // Check in Admin table
+        user = await Admin.findOne({ email, password });
+        if (user) {
+          userType = 'admin';
+        }
+      }
     }
 
+    // If no user is found in any table
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -40,12 +51,19 @@ router.post('/login', async (req, res) => {
       userType: userType
     };
 
-    res.status(200).json({ message: 'Login successful', user });
+    // Return user details along with userType
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        email: user.email,
+        userType: userType
+      }
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
-
 // Profile route
 router.get('/profile', async (req, res) => {
   if (!req.session.user) {

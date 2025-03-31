@@ -7,7 +7,6 @@ const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    userType: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -24,17 +23,25 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      // Login navigation logic
-      if (formData.userType === "messUser") {
+      const { userType } = response.data.user; // Correctly access userType from response
+
+      // Navigate based on userType
+      if (userType === 'messUser') {
         navigate('/messDashboard');
-      } else if (formData.userType === "studentUser") {
+      } else if (userType === 'studentUser') {
         navigate('/profile');
-      } else if (formData.userType === "admin") {
-        navigate("/adminDashboard");
+      } else if (userType === 'admin') {
+        navigate('/adminDashboard');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('An error occurred while logging in.');
+
+      // Handle specific errors
+      if (error.response && error.response.status === 401) {
+        alert('Invalid email or password. Please try again.');
+      } else {
+        alert('An unexpected error occurred. Please try again later.');
+      }
     }
   };
 
@@ -112,32 +119,6 @@ const Login = () => {
                       </svg>
                     )}
                   </button>
-                </div>
-              </div>
-
-              {/* User Type Select */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <select
-                  name="userType"
-                  value={formData.userType}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors appearance-none bg-white"
-                >
-                  <option value="" disabled>Select User Type</option>
-                  <option value="messUser">Mess User</option>
-                  <option value="studentUser">Student User</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
                 </div>
               </div>
 
