@@ -17,7 +17,8 @@ import './App.css';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Menu from './pages/Menu';
-
+import MessUserProfile from './pages/Mess User/MessUserProfile';
+import MenuManager from './pages/Mess User/MenuManager';
 
 
 
@@ -43,7 +44,8 @@ const App = () => {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/menu" element={<Menu />} />
-
+        <Route path="/mess-user/profile" element={<MessUserProfile />} />
+        <Route path="/menu-manager" element={<MenuManager />} />
 
 
 

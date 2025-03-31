@@ -6,8 +6,8 @@ const router = express.Router();
 // Create a new DailyMenu
 router.post('/', async (req, res) => {
   try {
-    const { id, breakfast, lunch, snacks, dinner, day } = req.body;
-    const newMenu = new DailyMenu({ id, breakfast, lunch, snacks, dinner, day });
+    const { breakfast, lunch, snacks, dinner, day } = req.body;
+    const newMenu = new DailyMenu({  breakfast, lunch, snacks, dinner, day });
     await newMenu.save();
     res.status(201).json(newMenu);
   } catch (error) {
@@ -25,17 +25,30 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Update an existing DailyMenu
-router.put('/:id', async (req, res) => {
+// Get a DailyMenu by day
+router.get('/day/:day', async (req, res) => {
   try {
-    const { breakfast, lunch, snacks, dinner, day } = req.body;
+    const menu = await DailyMenu.findOne({ day: req.params.day });
+    if (!menu) {
+      return res.status(404).json({ error: 'DailyMenu not found for the specified day' });
+    }
+    res.status(200).json(menu);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update a DailyMenu by day
+router.put('/day/:day', async (req, res) => {
+  try {
+    const { breakfast, lunch, snacks, dinner } = req.body;
     const updatedMenu = await DailyMenu.findOneAndUpdate(
-      { id: req.params.id },
-      { breakfast, lunch, snacks, dinner, day },
+      { day: req.params.day },
+      { breakfast, lunch, snacks, dinner },
       { new: true, runValidators: true }
     );
     if (!updatedMenu) {
-      return res.status(404).json({ error: 'DailyMenu not found' });
+      return res.status(404).json({ error: 'DailyMenu not found for the specified day' });
     }
     res.status(200).json(updatedMenu);
   } catch (error) {
@@ -43,12 +56,12 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete an existing DailyMenu
-router.delete('/:id', async (req, res) => {
+// Delete a DailyMenu by day
+router.delete('/day/:day', async (req, res) => {
   try {
-    const deletedMenu = await DailyMenu.findOneAndDelete({ id: req.params.id });
+    const deletedMenu = await DailyMenu.findOneAndDelete({ day: req.params.day });
     if (!deletedMenu) {
-      return res.status(404).json({ error: 'DailyMenu not found' });
+      return res.status(404).json({ error: 'DailyMenu not found for the specified day' });
     }
     res.status(200).json({ message: 'DailyMenu deleted successfully' });
   } catch (error) {

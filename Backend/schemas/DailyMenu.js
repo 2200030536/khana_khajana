@@ -1,11 +1,7 @@
 import mongoose from 'mongoose';
 
 const dailyMenuSchema = new mongoose.Schema({
-  id: {
-    type: Number,
-    required: true,
-    unique: true
-  },
+
   breakfast: {
     type: String,
     required: true
