@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 
 const Signup = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-amber-50">
+    <div >
       <Navbar />
       
       <div className="flex justify-center items-center min-h-[calc(100vh-64px)] px-4 py-12">
