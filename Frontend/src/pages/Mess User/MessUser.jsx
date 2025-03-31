@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../axiosConfig";
 import MessUserProfile from "./MessUserProfile";
 import MenuManager from "./MenuManager";
+import StudentDetails from "./StudentDetails";
 import {
   AppBar,
   Toolbar,
@@ -47,7 +48,7 @@ function MessUser() {
     dashboard: <div>Dashboard Content</div>,
     editMenu: <MenuManager />,
     setPrice: <div>Set Price Content</div>,
-    students: <div>Students Content</div>,
+    students: <StudentDetails />,
     transactions: <div>Transactions Content</div>,
     addRevokeUser: <div>Add/Revoke User Content</div>,
     profile: <MessUserProfile />, // Render the MessUserProfile component
