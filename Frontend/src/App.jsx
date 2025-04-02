@@ -10,7 +10,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import StudentSignup from './components/StudentUserSignup';
 import MessUserSignup from './components/MessUserSignup';
-import Profile from './components/Profile';
+// import Profile from './components/Profile';
 import MessUser from './pages/Mess User/MessUser';
 import AdminUser from './pages/Admin User/AdminUser';
 import './App.css';
