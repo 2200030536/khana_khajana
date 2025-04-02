@@ -20,6 +20,7 @@ import Menu from './pages/Menu';
 import MessUserProfile from './pages/Mess User/MessUserProfile';
 import MenuManager from './pages/Mess User/MenuManager';
 import ProfilePage from './pages/Student Profile/ProfilePage';
+import MessUserPage from './pages/Mess User/MessUserPage';
 
 
 
@@ -40,7 +41,8 @@ const App = () => {
         <Route path="/update-menu" element={<UpdateMenu />} />
         <Route path="/delete-menu" element={<DeleteMenu />} />
         {/* mess user dashboard */}
-        <Route path="/messDashboard" element={<MessUser/>}></Route>
+        {/* <Route path="/messDashboard" element={<MessUser/>}></Route> */}
+        <Route path="/messDashboard" element={<MessUserPage/>}></Route>
         {/* admin dashboard */}
         <Route path="/adminDashboard" element={<AdminUser/>}></Route>
         <Route path="/about" element={<About />} />
