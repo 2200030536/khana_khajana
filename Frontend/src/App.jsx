@@ -19,6 +19,8 @@ import Contact from './pages/Contact';
 import Menu from './pages/Menu';
 import MessUserProfile from './pages/Mess User/MessUserProfile';
 import MenuManager from './pages/Mess User/MenuManager';
+import ProfilePage from './pages/Student Profile/ProfilePage';
+
 
 
 
@@ -31,7 +33,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/student-signup" element={<StudentSignup />} />
         <Route path="/messuser-signup" element={<MessUserSignup />} />
-        <Route path="/profile" element={<Profile />} />
+        {/* <Route path="/profile" element={<Profile />} /> */}
         <Route path="/menu-crud" element={<MenuCrud />} />
         <Route path="/create-menu" element={<CreateMenu />} />
         <Route path="/view-menus" element={<ViewMenus />} />
@@ -46,6 +48,7 @@ const App = () => {
         <Route path="/menu" element={<Menu />} />
         <Route path="/mess-user/profile" element={<MessUserProfile />} />
         <Route path="/menu-manager" element={<MenuManager />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
 
 

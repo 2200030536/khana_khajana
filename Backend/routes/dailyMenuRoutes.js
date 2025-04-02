@@ -6,11 +6,21 @@ const router = express.Router();
 // Create a new DailyMenu
 router.post('/', async (req, res) => {
   try {
-    const { breakfast, lunch, snacks, dinner, day } = req.body;
-    const newMenu = new DailyMenu({  breakfast, lunch, snacks, dinner, day });
+    const { breakfast, lunch, snacks, dinner, day, lastModifiedBy, lastModifiedAt } = req.body;
+    const newMenu = new DailyMenu({ 
+      breakfast, 
+      lunch, 
+      snacks, 
+      dinner, 
+      day,
+      lastModifiedBy,
+      lastModifiedAt 
+    });
+    
     await newMenu.save();
     res.status(201).json(newMenu);
   } catch (error) {
+    console.error('Error saving menu:', error.message);
     res.status(400).json({ error: error.message });
   }
 });
@@ -41,10 +51,10 @@ router.get('/day/:day', async (req, res) => {
 // Update a DailyMenu by day
 router.put('/day/:day', async (req, res) => {
   try {
-    const { breakfast, lunch, snacks, dinner } = req.body;
+    const { breakfast, lunch, snacks, dinner, lastModifiedBy, lastModifiedAt } = req.body;
     const updatedMenu = await DailyMenu.findOneAndUpdate(
       { day: req.params.day },
-      { breakfast, lunch, snacks, dinner },
+      { breakfast, lunch, snacks, dinner, lastModifiedBy, lastModifiedAt },
       { new: true, runValidators: true }
     );
     if (!updatedMenu) {

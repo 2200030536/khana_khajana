@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
@@ -12,15 +13,15 @@ import {
   Avatar,
   Fade,
 } from "@mui/material";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import LogoutIcon from "@mui/icons-material/Logout";
-import SettingsIcon from "@mui/icons-material/Settings";
-import PersonIcon from "@mui/icons-material/Person";
-import axiosInstance from "../axiosConfig";
-import { useNavigate } from "react-router-dom";
+import {
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+} from "@mui/icons-material";
+import axiosInstance from "../../axiosConfig";
 
 const ProfileNavbar = ({ user }) => {
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
 

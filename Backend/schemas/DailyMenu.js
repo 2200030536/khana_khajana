@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
 const dailyMenuSchema = new mongoose.Schema({
-
   breakfast: {
     type: String,
     required: true
@@ -20,9 +19,23 @@ const dailyMenuSchema = new mongoose.Schema({
   },
   day: {
     type: String,
+    required: true,
+    unique: true
+  },
+  lastModifiedBy: {
+    type: String,
+    required: true
+  },
+  lastModifiedAt: {
+    type: String,
     required: true
   }
+}, { 
+  timestamps: true // This adds createdAt and updatedAt fields
 });
+
+// Add index for day field
+dailyMenuSchema.index({ day: 1 }, { unique: true });
 
 const DailyMenu = mongoose.model('DailyMenu', dailyMenuSchema);
 

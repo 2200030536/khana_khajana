@@ -13,279 +13,561 @@ import {
   Card,
   CardContent,
   Grid,
+  Fade,
+  CircularProgress,
+  Snackbar,
+  Alert,
+  useTheme,
+  useMediaQuery,
+  Backdrop,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
+import {
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Refresh as RefreshIcon,
+  Add as AddIcon,
+  Today as TodayIcon,
+} from '@mui/icons-material';
 
 const MenuManager = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // Constants
+  const DAYS_OF_WEEK = [
+    { value: '1', label: 'Sunday' },
+    { value: '2', label: 'Monday' },
+    { value: '3', label: 'Tuesday' },
+    { value: '4', label: 'Wednesday' },
+    { value: '5', label: 'Thursday' },
+    { value: '6', label: 'Friday' },
+    { value: '7', label: 'Saturday' },
+    { value: '8', label: 'Specials' },
+  ];
+
+  const CURRENT_USER = '2200030536';
+  const CURRENT_DATE = '2025-04-02 11:53:55';
+
+  // State
   const [formData, setFormData] = useState({
     breakfast: '',
     lunch: '',
     snacks: '',
     dinner: '',
     day: '',
+    lastModifiedBy: CURRENT_USER,
+    lastModifiedAt: CURRENT_DATE,
   });
+  
   const [menus, setMenus] = useState([]);
-  const [activeTab, setActiveTab] = useState('view'); // Tabs: 'view', 'create', 'update', 'delete'
+  const [activeTab, setActiveTab] = useState('view');
+  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+  const [selectedMenu, setSelectedMenu] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchMenus();
   }, []);
 
+  const getDayName = (dayValue) => {
+    const day = DAYS_OF_WEEK.find(day => day.value === String(dayValue));
+    return day ? day.label : 'Invalid day';
+  };
+
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
   const fetchMenus = async () => {
+    setLoading(true);
     try {
       const response = await axiosInstance.get('/menus');
       setMenus(response.data);
     } catch (error) {
-      console.error('Error fetching menus:', error);
-      alert('An error occurred while fetching the menus.');
+      showNotification('Error fetching menus: ' + (error.response?.data?.message || error.message), 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchMenus();
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
 
-    // If updating and the day is selected, fetch the menu data for that day
-    if (activeTab === 'update' && e.target.name === 'day') {
-      const selectedDay = e.target.value;
-      const menuForDay = menus.find((menu) => menu.day === parseInt(selectedDay));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevData => ({
+      ...prevData,
+      [name]: value,
+      lastModifiedBy: CURRENT_USER,
+      lastModifiedAt: CURRENT_DATE,
+    }));
+
+    if (activeTab === 'update' && name === 'day') {
+      const menuForDay = menus.find(menu => menu.day === value);
       if (menuForDay) {
         setFormData({
-          breakfast: menuForDay.breakfast,
-          lunch: menuForDay.lunch,
-          snacks: menuForDay.snacks,
-          dinner: menuForDay.dinner,
-          day: selectedDay,
+          ...menuForDay,
+          lastModifiedBy: CURRENT_USER,
+          lastModifiedAt: CURRENT_DATE,
         });
+        setSelectedMenu(menuForDay);
       } else {
-        // Clear the form if no menu is found for the selected day
-        setFormData({
+        setFormData(prev => ({
+          ...prev,
           breakfast: '',
           lunch: '',
           snacks: '',
           dinner: '',
-          day: selectedDay,
-        });
+          day: value,
+          lastModifiedBy: CURRENT_USER,
+          lastModifiedAt: CURRENT_DATE,
+        }));
+        setSelectedMenu(null);
       }
     }
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
-  
-    // Debugging: Log the formData before sending the request
-    console.log('Creating menu with data:', formData);
-  
-    // Validate formData
-    if (!formData.day || !formData.breakfast || !formData.lunch || !formData.snacks || !formData.dinner) {
-      alert('Please fill in all fields before creating the menu.');
+    setLoading(true);
+
+    const requiredFields = ['breakfast', 'lunch', 'snacks', 'dinner', 'day'];
+    if (requiredFields.some(field => !formData[field])) {
+      showNotification('Please fill in all required fields', 'warning');
+      setLoading(false);
       return;
     }
-  
+
     try {
-      const response = await axiosInstance.post('/menus', formData);
-      console.log('Menu created successfully:', response.data); // Debugging: Log the response
-      alert('Menu created successfully!');
-      fetchMenus(); // Refresh the menus list
-      setFormData({ breakfast: '', lunch: '', snacks: '', dinner: '', day: '' }); // Clear the form
+      const response = await axiosInstance.post('/menus', {
+        ...formData,
+        lastModifiedBy: CURRENT_USER,
+        lastModifiedAt: CURRENT_DATE
+      });
+
+      setMenus(prevMenus => [...prevMenus, response.data]);
+      showNotification('Menu created successfully!');
+      setActiveTab('view');
+      setFormData({
+        breakfast: '',
+        lunch: '',
+        snacks: '',
+        dinner: '',
+        day: '',
+        lastModifiedBy: CURRENT_USER,
+        lastModifiedAt: CURRENT_DATE,
+      });
     } catch (error) {
-      console.error('Error creating menu:', error.response?.data || error.message); // Debugging: Log the error
-      alert('An error occurred while creating the menu. Please try again.');
+      showNotification(error.response?.data?.error || 'Error creating menu', 'error');
+    } finally {
+      setLoading(false);
     }
   };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    if (!formData.day) {
+      showNotification('Please select a day to update', 'warning');
+      setLoading(false);
+      return;
+    }
+
     try {
-      await axiosInstance.put(`/menus/day/${formData.day}`, formData); // Update by day
-      alert('Menu updated successfully!');
-      fetchMenus();
-      setFormData({ breakfast: '', lunch: '', snacks: '', dinner: '', day: '' });
+      const response = await axiosInstance.put(`/menus/day/${formData.day}`, {
+        ...formData,
+        lastModifiedBy: CURRENT_USER,
+        lastModifiedAt: CURRENT_DATE
+      });
+
+      setMenus(prevMenus => 
+        prevMenus.map(menu => 
+          menu.day === response.data.day ? response.data : menu
+        )
+      );
+      showNotification('Menu updated successfully!');
+      setActiveTab('view');
+      setFormData({
+        breakfast: '',
+        lunch: '',
+        snacks: '',
+        dinner: '',
+        day: '',
+        lastModifiedBy: CURRENT_USER,
+        lastModifiedAt: CURRENT_DATE,
+      });
     } catch (error) {
-      console.error('Error updating menu:', error);
-      alert('An error occurred while updating the menu.');
+      showNotification(error.response?.data?.error || 'Error updating menu', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDelete = async (e) => {
     e.preventDefault();
+    if (!formData.day) {
+      showNotification('Please select a day to delete', 'warning');
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete the menu for ${getDayName(formData.day)}?`)) {
+      return;
+    }
+
     try {
-      await axiosInstance.delete(`/menus/day/${formData.day}`); // Delete by day
-      alert('Menu deleted successfully!');
-      fetchMenus();
-      setFormData({ breakfast: '', lunch: '', snacks: '', dinner: '', day: '' });
+      setLoading(true);
+      await axiosInstance.delete(`/menus/day/${formData.day}`);
+      setMenus(prevMenus => prevMenus.filter(menu => menu.day !== formData.day));
+      showNotification('Menu deleted successfully!');
+      setActiveTab('view');
+      setFormData({
+        breakfast: '',
+        lunch: '',
+        snacks: '',
+        dinner: '',
+        day: '',
+        lastModifiedBy: CURRENT_USER,
+        lastModifiedAt: CURRENT_DATE,
+      });
     } catch (error) {
-      console.error('Error deleting menu:', error);
-      alert('An error occurred while deleting the menu.');
+      showNotification(error.response?.data?.error || 'Error deleting menu', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getDayName = (day) => {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Specials'];
-    return days[day - 1] || 'Invalid day';
-  };
-
-  return (
-    <Container maxWidth="lg" style={{ marginTop: '50px' }}>
-      <Typography variant="h4" gutterBottom align="center" style={{ fontWeight: 'bold', color: '#3f51b5' }}>
-        Menu Management
+  const MenuField = ({ label, value }) => (
+    <Box mb={1}>
+      <Typography variant="body2" color="textSecondary" gutterBottom>
+        <strong>{label}:</strong> {value}
       </Typography>
+    </Box>
+  );
 
-      {/* Tabs for CRUD Operations */}
-      <Box mb={3} display="flex" justifyContent="center" gap={2}>
-        <Button
-          variant={activeTab === 'view' ? 'contained' : 'outlined'}
-          onClick={() => setActiveTab('view')}
-          color="primary"
-        >
-          View Menus
-        </Button>
-        <Button
-          variant={activeTab === 'create' ? 'contained' : 'outlined'}
-          onClick={() => setActiveTab('create')}
-          color="success"
-        >
-          Create Menu
-        </Button>
-        <Button
-          variant={activeTab === 'update' ? 'contained' : 'outlined'}
-          onClick={() => setActiveTab('update')}
-          color="warning"
-        >
-          Update Menu
-        </Button>
-        <Button
-          variant={activeTab === 'delete' ? 'contained' : 'outlined'}
-          onClick={() => setActiveTab('delete')}
-          color="error"
-        >
-          Delete Menu
-        </Button>
-      </Box>
-
-      {/* Dynamic Content Based on Active Tab */}
-      {activeTab === 'view' && (
-        <Box>
-          <Typography variant="h6" gutterBottom>
-            All Menus
-          </Typography>
-          <Grid container spacing={3}>
-            {menus.map((menu) => (
-              <Grid item xs={12} sm={6} md={4} key={menu.day}>
-                <Card
-                  style={{
-                    backgroundColor: '#f5f5f5',
-                    transition: 'transform 0.3s',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                >
-                  <CardContent>
-                    <Typography variant="h6" style={{ fontWeight: 'bold', color: '#3f51b5' }}>
+  const renderMenuCards = () => (
+    <Grid container spacing={3}>
+      {menus
+        .sort((a, b) => parseInt(a.day) - parseInt(b.day))
+        .map((menu) => (
+          <Grid item xs={12} sm={6} md={4} key={menu._id || menu.day}>
+            <Fade in timeout={500}>
+              <Card
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: theme.shadows[8],
+                  },
+                }}
+              >
+                <CardContent sx={{ flexGrow: 1, pb: 2 }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
                       {getDayName(menu.day)}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      <strong>Breakfast:</strong> {menu.breakfast}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      <strong>Lunch:</strong> {menu.lunch}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      <strong>Snacks:</strong> {menu.snacks}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      <strong>Dinner:</strong> {menu.dinner}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+                    <Box>
+                      <Tooltip title="Edit Menu">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setFormData({
+                              ...menu,
+                              lastModifiedBy: CURRENT_USER,
+                              lastModifiedAt: CURRENT_DATE,
+                            });
+                            setActiveTab('update');
+                          }}
+                        >
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Menu">
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setFormData({
+                              ...menu,
+                              lastModifiedBy: CURRENT_USER,
+                              lastModifiedAt: CURRENT_DATE,
+                            });
+                            setActiveTab('delete');
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </Box>
+                  <MenuField label="Breakfast" value={menu.breakfast} />
+                  <MenuField label="Lunch" value={menu.lunch} />
+                  <MenuField label="Snacks" value={menu.snacks} />
+                  <MenuField label="Dinner" value={menu.dinner} />
+                  {menu.lastModifiedBy && (
+                    <Box mt={2} pt={2} borderTop={1} borderColor="divider">
+                      <Typography variant="caption" color="textSecondary">
+                        Last modified by: {menu.lastModifiedBy}
+                        <br />
+                        at: {menu.lastModifiedAt}
+                      </Typography>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Fade>
           </Grid>
+        ))}
+    </Grid>
+  );
+
+  const ActionButtons = () => (
+    <Box
+      mb={4}
+      display="flex"
+      justifyContent="center"
+      gap={2}
+      flexWrap="wrap"
+      sx={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1,
+        backgroundColor: 'background.default',
+        py: 2,
+        borderBottom: 1,
+        borderColor: 'divider',
+      }}
+    >
+      <Button
+        variant={activeTab === 'view' ? 'contained' : 'outlined'}
+        onClick={() => setActiveTab('view')}
+        startIcon={<RefreshIcon />}
+        color="primary"
+      >
+        View Menus
+      </Button>
+      <Button
+        variant={activeTab === 'create' ? 'contained' : 'outlined'}
+        onClick={() => {
+          setActiveTab('create');
+          setFormData({
+            breakfast: '',
+            lunch: '',
+            snacks: '',
+            dinner: '',
+            day: '',
+            lastModifiedBy: CURRENT_USER,
+            lastModifiedAt: CURRENT_DATE,
+          });
+        }}
+        startIcon={<AddIcon />}
+        color="success"
+      >
+        Create Menu
+      </Button>
+      <Button
+        variant={activeTab === 'update' ? 'contained' : 'outlined'}
+        onClick={() => {
+          setActiveTab('update');
+          setFormData({
+            breakfast: '',
+            lunch: '',
+            snacks: '',
+            dinner: '',
+            day: '',
+            lastModifiedBy: CURRENT_USER,
+            lastModifiedAt: CURRENT_DATE,
+          });
+        }}
+        startIcon={<EditIcon />}
+        color="warning"
+      >
+        Update Menu
+      </Button>
+      <Button
+        variant={activeTab === 'delete' ? 'contained' : 'outlined'}
+        onClick={() => {
+          setActiveTab('delete');
+          setFormData({
+            breakfast: '',
+            lunch: '',
+            snacks: '',
+            dinner: '',
+            day: '',
+            lastModifiedBy: CURRENT_USER,
+            lastModifiedAt: CURRENT_DATE,
+          });
+        }}
+        startIcon={<DeleteIcon />}
+        color="error"
+      >
+        Delete Menu
+      </Button>
+    </Box>
+  );
+
+  return (
+    <Container maxWidth="lg" sx={{ mt: 5, pb: 5 }}>
+      <Box mb={4} display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+          Menu Management
+        </Typography>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Typography variant="body2" color="textSecondary">
+            <TodayIcon sx={{ fontSize: 'small', mr: 0.5, verticalAlign: 'middle' }} />
+            {CURRENT_DATE}
+          </Typography>
+          <Tooltip title="Refresh Menus">
+            <IconButton onClick={handleRefresh} disabled={isRefreshing}>
+              <RefreshIcon sx={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none' }} />
+            </IconButton>
+          </Tooltip>
         </Box>
-      )}
+      </Box>
 
-      {(activeTab === 'create' || activeTab === 'update') && (
-        <form onSubmit={activeTab === 'create' ? handleCreate : handleUpdate}>
-          <FormControl variant="outlined" fullWidth margin="normal" required>
-            <InputLabel id="day-label">Day</InputLabel>
-            <Select labelId="day-label" label="Day" name="day" value={formData.day} onChange={handleChange}>
-              <MenuItem value={1}>Sunday</MenuItem>
-              <MenuItem value={2}>Monday</MenuItem>
-              <MenuItem value={3}>Tuesday</MenuItem>
-              <MenuItem value={4}>Wednesday</MenuItem>
-              <MenuItem value={5}>Thursday</MenuItem>
-              <MenuItem value={6}>Friday</MenuItem>
-              <MenuItem value={7}>Saturday</MenuItem>
-              <MenuItem value={8}>Specials</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField
-            label="Breakfast"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            name="breakfast"
-            value={formData.breakfast}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Lunch"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            name="lunch"
-            value={formData.lunch}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Snacks"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            name="snacks"
-            value={formData.snacks}
-            onChange={handleChange}
-            required
-          />
-          <TextField
-            label="Dinner"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            name="dinner"
-            value={formData.dinner}
-            onChange={handleChange}
-            required
-          />
-          <Box mt={2}>
-            <Button variant="contained" color="primary" type="submit" fullWidth>
-              {activeTab === 'create' ? 'Create Menu' : 'Update Menu'}
-            </Button>
-          </Box>
-        </form>
-      )}
+      <ActionButtons />
 
-      {activeTab === 'delete' && (
-        <form onSubmit={handleDelete}>
-          <FormControl variant="outlined" fullWidth margin="normal" required>
-            <InputLabel id="day-label">Day</InputLabel>
-            <Select labelId="day-label" label="Day" name="day" value={formData.day} onChange={handleChange}>
-              <MenuItem value={1}>Sunday</MenuItem>
-              <MenuItem value={2}>Monday</MenuItem>
-              <MenuItem value={3}>Tuesday</MenuItem>
-              <MenuItem value={4}>Wednesday</MenuItem>
-              <MenuItem value={5}>Thursday</MenuItem>
-              <MenuItem value={6}>Friday</MenuItem>
-              <MenuItem value={7}>Saturday</MenuItem>
-              <MenuItem value={8}>Specials</MenuItem>
-            </Select>
-          </FormControl>
-          <Box mt={2}>
-            <Button variant="contained" color="secondary" type="submit" fullWidth>
-              Delete Menu
-            </Button>
-          </Box>
-        </form>
-      )}
+      <Fade in timeout={500}>
+        <Box>
+          {activeTab === 'view' && (
+            <>
+              {loading ? (
+                <Box display="flex" justifyContent="center" my={4}>
+                  <CircularProgress />
+                </Box>
+              ) : menus.length > 0 ? (
+                renderMenuCards()
+              ) : (
+                <Typography align="center">No menus found. Use the 'Create Menu' tab to add one.</Typography>
+              )}
+            </>
+          )}
+
+          {(activeTab === 'create' || activeTab === 'update' || activeTab === 'delete') && (
+            <Card sx={{ p: 3, boxShadow: 3 }}>
+              <form onSubmit={activeTab === 'create' ? handleCreate : activeTab === 'update' ? handleUpdate : handleDelete}>
+                <FormControl variant="outlined" fullWidth margin="normal" required>
+                  <InputLabel id="day-label">Day</InputLabel>
+                  <Select
+                    labelId="day-label"
+                    label="Day"
+                    name="day"
+                    value={formData.day}
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="" disabled><em>Select a day...</em></MenuItem>
+                    {DAYS_OF_WEEK.map(day => (
+                      <MenuItem key={day.value} value={day.value}>{day.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {(activeTab !== 'delete' && (formData.day || activeTab === 'create')) && (
+                  <Box sx={{ mt: 2 }}>
+                    <TextField
+                      label="Breakfast"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      name="breakfast"
+                      value={formData.breakfast}
+                      onChange={handleChange}
+                      required
+                      multiline
+                      rows={2}
+                    />
+                    <TextField
+                      label="Lunch"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      name="lunch"
+                      value={formData.lunch}
+                      onChange={handleChange}
+                      required
+                      multiline
+                      rows={2}
+                    />
+                    <TextField
+                      label="Snacks"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      name="snacks"
+                      value={formData.snacks}
+                      onChange={handleChange}
+                      required
+                      multiline
+                      rows={2}
+                    />
+                    <TextField
+                      label="Dinner"
+                      variant="outlined"
+                      fullWidth
+                      margin="normal"
+                      name="dinner"
+                      value={formData.dinner}
+                      onChange={handleChange}
+                      required
+                      multiline
+                      rows={2}
+                    />
+                  </Box>
+                )}
+
+                <Box mt={3}>
+                  <Button
+                    variant="contained"
+                    color={activeTab === 'create' ? 'success' : activeTab === 'update' ? 'warning' : 'error'}
+                    type="submit"
+                    fullWidth
+                    size="large"
+                    disabled={loading}
+                    sx={{
+                      height: 56,
+                      position: 'relative',
+                    }}
+                  >
+                    {loading ? (
+                      <CircularProgress size={24} sx={{ position: 'absolute' }} />
+                    ) : (
+                      `${activeTab === 'create' ? 'Create' : activeTab === 'update' ? 'Update' : 'Delete'} Menu`
+                    )}
+                  </Button>
+                </Box>
+              </form>
+            </Card>
+          )}
+        </Box>
+      </Fade>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
+
+      <Backdrop sx={{ color: '#fff', zIndex: theme.zIndex.drawer + 1 }} open={loading}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Container>
   );
 };
