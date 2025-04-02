@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import CreateMenu from './components/CreateMenu';
-import ViewMenus from './components/ViewMenus';
-import UpdateMenu from './components/UpdateMenu';
-import DeleteMenu from './components/DeleteMenu';
-import MenuCrud from './components/MenuCrud';
+// import CreateMenu from './components/CreateMenu';
+// import ViewMenus from './components/ViewMenus';
+// import UpdateMenu from './components/UpdateMenu';
+// import DeleteMenu from './components/DeleteMenu';
+// import MenuCrud from './components/MenuCrud';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -19,7 +19,7 @@ import Contact from './pages/Contact';
 import Menu from './pages/Menu';
 import MessUserProfile from './pages/Mess User/MessUserProfile';
 import MenuManager from './pages/Mess User/MenuManager';
-import ProfilePage from './pages/Student Profile/ProfilePage';
+import ProfilePage from './pages/Student user/ProfilePage';
 import MessUserPage from './pages/Mess User/MessUserPage';
 
 
@@ -35,11 +35,11 @@ const App = () => {
         <Route path="/student-signup" element={<StudentSignup />} />
         <Route path="/messuser-signup" element={<MessUserSignup />} />
         {/* <Route path="/profile" element={<Profile />} /> */}
-        <Route path="/menu-crud" element={<MenuCrud />} />
+        {/* <Route path="/menu-crud" element={<MenuCrud />} />
         <Route path="/create-menu" element={<CreateMenu />} />
         <Route path="/view-menus" element={<ViewMenus />} />
         <Route path="/update-menu" element={<UpdateMenu />} />
-        <Route path="/delete-menu" element={<DeleteMenu />} />
+        <Route path="/delete-menu" element={<DeleteMenu />} /> */}
         {/* mess user dashboard */}
         {/* <Route path="/messDashboard" element={<MessUser/>}></Route> */}
         <Route path="/messDashboard" element={<MessUserPage/>}></Route>
