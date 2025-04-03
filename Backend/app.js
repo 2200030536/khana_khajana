@@ -10,6 +10,8 @@ import adminRoutes from './routes/adminRoutes.js';
 import studentTransactionRoutes from './routes/studentTransactionRoutes.js';
 import dailyMenuRoutes from './routes/dailyMenuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import priceRoutes from './routes/priceRoutes.js';
+
 
 const app = express();
 const port = 3001;
@@ -46,6 +48,7 @@ app.use('/admins', adminRoutes);
 app.use('/transactions', studentTransactionRoutes);
 app.use('/menus', dailyMenuRoutes);
 app.use('/auth', authRoutes);
+app.use('/api/prices', priceRoutes);
 app.use('/api/daily-menus', dailyMenuRoutes);
 
 // Serve the HTML file
