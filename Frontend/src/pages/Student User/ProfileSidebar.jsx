@@ -16,6 +16,7 @@ import {
   Edit as EditIcon,
   Receipt as ReceiptIcon,
   MenuBook as MenuBookIcon,
+  ShoppingCart as ShoppingCartIcon
 } from "@mui/icons-material";
 import { keyframes } from "@emotion/react";
 
@@ -28,10 +29,11 @@ const pulse = keyframes`
 
 const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveItem, fadeIn }) => {
   const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon /> },
-    { text: "Edit Profile", icon: <EditIcon /> },
-    { text: "Transactions", icon: <ReceiptIcon /> },
-    { text: "Weekly Menu", icon: <MenuBookIcon /> }
+    { label: "Dashboard", icon: <DashboardIcon />, key: "dashboard"},
+    { label: "Browse Plans", icon: <ShoppingCartIcon />, key: "browsePlans"},
+    { label: "Profile", icon: <EditIcon />, key: "profile"}, // Changed key to lowercase "profile"
+    // { label: "Transactions", icon: <ReceiptIcon />, key: "transactions"},
+    // { label: "Weekly Menu", icon: <MenuBookIcon />, key: "weeklyMenu"},
   ];
 
   return (
@@ -62,54 +64,11 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
     >
       <Box 
         sx={{ 
-          p: 2.5, 
+          p: 5, 
           textAlign: "center",
           animation: `${fadeIn} 0.7s ease-out`,
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: "bold",
-            mb: 3,
-            textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-          }}
-        >
-          Your Plan Status
-        </Typography>
-        
-        {transactionStatus === "available" ? (
-          <Chip
-            label="Active Plan"
-            color="success"
-            sx={{ 
-              p: 2.5, 
-              fontSize: "1rem", 
-              fontWeight: 500,
-              boxShadow: "0 2px 10px rgba(76, 175, 80, 0.3)",
-              animation: `${pulse} 2s infinite ease-in-out`,
-            }}
-          />
-        ) : (
-          <Button
-            variant="contained"
-            color="error"
-            sx={{ 
-              px: 3,
-              py: 1,
-              fontWeight: 600,
-              borderRadius: 2,
-              boxShadow: "0 4px 12px rgba(244, 67, 54, 0.3)",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                transform: "translateY(-3px)",
-                boxShadow: "0 6px 15px rgba(244, 67, 54, 0.4)",
-              }
-            }}
-          >
-            Apply Now
-          </Button>
-        )}
       </Box>
       
       <Divider sx={{ borderColor: "rgba(255,255,255,0.1)" }} />
@@ -117,15 +76,15 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
       <List component="nav" sx={{ p: 1.5 }}>
         {menuItems.map((item, index) => (
           <ListItem
-            key={item.text}
-            button
-            selected={activeItem === item.text}
-            onClick={() => setActiveItem(item.text)}
+            key={item.key}
+            onClick={() => setActiveItem(item.key)}
+            selected={activeItem === item.key}
+            button // Add this prop to make it clickable
             sx={{
               borderRadius: 1.5,
               mb: index < menuItems.length - 1 ? 1 : 0,
               transition: "all 0.3s ease",
-              backgroundColor: activeItem === item.text ? "rgba(255,255,255,0.15)" : "transparent",
+              backgroundColor: activeItem === item.key ? "rgba(255,255,255,0.15)" : "transparent",
               animation: `${fadeIn} ${0.3 + index * 0.1}s ease-out`,
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,0.2)",
@@ -136,7 +95,7 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
               },
               "&.Mui-selected:hover": {
                 backgroundColor: "rgba(255,255,255,0.25)",
-              }
+              },
             }}
           >
             <ListItemIcon 
@@ -144,7 +103,7 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
                 color: "#fff", 
                 minWidth: 40,
                 transition: "transform 0.2s ease",
-                ...(activeItem === item.text && {
+                ...(activeItem === item.key && {
                   transform: "scale(1.2)",
                 })
               }}
@@ -152,9 +111,9 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
               {item.icon}
             </ListItemIcon>
             <ListItemText 
-              primary={item.text}
+              primary={item.label}
               primaryTypographyProps={{
-                fontWeight: activeItem === item.text ? 600 : 400,
+                fontWeight: activeItem === item.key ? 600 : 400,
               }} 
             />
           </ListItem>

@@ -3,36 +3,34 @@ import {
   Box,
   Typography,
   Paper,
-  TextField,
+  Tabs,
+  Tab,
   Button,
-  Grid,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
+  TextField,
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
   Divider,
-  Tab,
-  Tabs,
-  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   CircularProgress,
-  Alert,
+  Alert
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
   Search as SearchIcon,
-  Person as PersonIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import axiosInstance from '../../axiosConfig';
 
@@ -49,6 +47,8 @@ const UserManagement = () => {
     email: '',
     password: '',
     userType: 'studentUser',
+    id: '',
+    department: '',
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -57,28 +57,35 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  // Modified to fetch actual users from backend
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // In a real app, we would fetch from the API
-      // const response = await axiosInstance.get('/users');
+      setError('');
       
-      // For now, use sample data
-      setTimeout(() => {
-        const sampleUsers = [
-          { id: 1, name: 'John Doe', email: 'john.doe@example.com', userType: 'studentUser' },
-          { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', userType: 'studentUser' },
-          { id: 3, name: 'Mike Johnson', email: 'mike@example.com', userType: 'messUser' },
-          { id: 4, name: 'Sarah Williams', email: 'sarah@example.com', userType: 'studentUser' },
-          { id: 5, name: 'David Brown', email: 'david@example.com', userType: 'messUser' },
-        ];
-        
-        setUsers(sampleUsers);
-        setLoading(false);
-      }, 1000);
+      // Fetch both student and mess users and combine them - using correct API paths
+      const [studentsResponse, messUsersResponse] = await Promise.all([
+        axiosInstance.get('/students'),
+        axiosInstance.get('/messUsers')
+      ]);
+      
+      const studentUsers = studentsResponse.data.map(user => ({
+        ...user,
+        userType: 'studentUser'
+      }));
+      
+      const messUsers = messUsersResponse.data.map(user => ({
+        ...user,
+        userType: 'messUser'
+      }));
+      
+      // Combine both user types
+      const allUsers = [...studentUsers, ...messUsers];
+      setUsers(allUsers);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching users:', error);
-      setError('Failed to load users.');
+      setError('Failed to load users. ' + (error.response?.data?.error || error.message));
       setLoading(false);
     }
   };
@@ -99,61 +106,94 @@ const UserManagement = () => {
     });
   };
 
+  // Updated to add user to the correct backend endpoint
   const handleAddUser = async () => {
     try {
-      setLoading(true);
-      // In a real app, we would send to the API
-      // await axiosInstance.post('/users', formData);
+      // Validation
+      const requiredFields = ['name', 'email', 'password', 'id'];
+      if (formData.userType === 'studentUser') requiredFields.push('department');
       
-      // For now, simulate API call
-      setTimeout(() => {
-        const newUser = {
-          id: users.length + 1,
-          ...formData,
-        };
-        
-        setUsers([...users, newUser]);
-        setOpenAddDialog(false);
-        setFormData({
-          name: '',
-          email: '',
-          password: '',
-          userType: 'studentUser',
-        });
-        setSuccess('User added successfully!');
-        setLoading(false);
-      }, 1000);
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        setError(`Please fill all required fields: ${missingFields.join(', ')}`);
+        return;
+      }
+      
+      setLoading(true);
+      setError('');
+      
+      // Determine which API endpoint to use based on user type - using correct API paths
+      const endpoint = formData.userType === 'studentUser' ? '/students' : '/messUsers';
+      
+      // Create payload based on user type
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        id: formData.id
+      };
+      
+      // Add department field for student users
+      if (formData.userType === 'studentUser') {
+        payload.department = formData.department;
+      }
+      
+      const response = await axiosInstance.post(endpoint, payload);
+      
+      // Add the user type to the response data
+      const newUser = {
+        ...response.data,
+        userType: formData.userType
+      };
+      
+      setUsers([...users, newUser]);
+      setOpenAddDialog(false);
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        userType: 'studentUser',
+        id: '',
+        department: '',
+      });
+      setSuccess('User added successfully!');
+      setLoading(false);
     } catch (error) {
       console.error('Error adding user:', error);
-      setError('Failed to add user.');
+      setError('Failed to add user. ' + (error.response?.data?.error || error.message));
       setLoading(false);
     }
   };
 
+  // Updated to delete user from the correct backend endpoint
   const handleRevokeUser = async () => {
     if (!selectedUser) return;
     
     try {
       setLoading(true);
-      // In a real app, we would send to the API
-      // await axiosInstance.delete(`/users/${selectedUser.id}`);
+      setError('');
       
-      // For now, simulate API call
-      setTimeout(() => {
-        const updatedUsers = users.filter(user => user.id !== selectedUser.id);
-        setUsers(updatedUsers);
-        setOpenRevokeDialog(false);
-        setSelectedUser(null);
-        setSuccess('User removed successfully!');
-        setLoading(false);
-      }, 1000);
+      // Determine which API endpoint to use based on user type - using correct API paths
+      const endpoint = selectedUser.userType === 'studentUser' 
+        ? `/students/${selectedUser.id}` 
+        : `/messUsers/${selectedUser.id}`;
+      
+      await axiosInstance.delete(endpoint);
+      
+      const updatedUsers = users.filter(user => !(user.id === selectedUser.id && user.userType === selectedUser.userType));
+      setUsers(updatedUsers);
+      setOpenRevokeDialog(false);
+      setSelectedUser(null);
+      setSuccess('User removed successfully!');
+      setLoading(false);
     } catch (error) {
       console.error('Error removing user:', error);
-      setError('Failed to remove user.');
+      setError('Failed to remove user. ' + (error.response?.data?.error || error.message));
       setLoading(false);
     }
   };
 
+  // Rest of filtering logic remains the same
   const filteredUsers = users.filter(user => {
     const searchLower = searchQuery.toLowerCase();
     return (
@@ -188,6 +228,7 @@ const UserManagement = () => {
       )}
 
       <Paper elevation={3} sx={{ p: 3 }}>
+        {/* Existing tabs code */}
         <Box mb={3} display="flex" justifyContent="space-between" alignItems="center">
           <Tabs value={activeTab} onChange={handleTabChange}>
             <Tab label="All Users" />
@@ -208,6 +249,7 @@ const UserManagement = () => {
           </Button>
         </Box>
         
+        {/* Existing search bar code */}
         <Box mb={3}>
           <TextField
             placeholder="Search users..."
@@ -225,6 +267,7 @@ const UserManagement = () => {
           />
         </Box>
         
+        {/* User list - remains mostly the same */}
         {loading ? (
           <Box display="flex" justifyContent="center" my={4}>
             <CircularProgress />
@@ -232,7 +275,7 @@ const UserManagement = () => {
         ) : filteredUsersByType.length > 0 ? (
           <List>
             {filteredUsersByType.map((user) => (
-              <React.Fragment key={user.id}>
+              <React.Fragment key={`${user.userType}-${user.id}`}>
                 <ListItem>
                   <ListItemText
                     primary={
@@ -241,8 +284,13 @@ const UserManagement = () => {
                     secondary={
                       <Box>
                         <Typography variant="body2" color="text.secondary">
-                          {user.email}
+                          {user.email} {user.id && `(ID: ${user.id})`}
                         </Typography>
+                        {user.department && (
+                          <Typography variant="body2" color="text.secondary">
+                            Department: {user.department}
+                          </Typography>
+                        )}
                         <Typography variant="caption" 
                           sx={{ 
                             bgcolor: user.userType === 'studentUser' ? '#e3f2fd' : '#fff8e1',
@@ -284,7 +332,7 @@ const UserManagement = () => {
         )}
       </Paper>
 
-      {/* Add User Dialog */}
+      {/* Modified Add User Dialog with additional fields */}
       <Dialog open={openAddDialog} onClose={() => setOpenAddDialog(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Add New User</DialogTitle>
         <DialogContent>
@@ -298,6 +346,17 @@ const UserManagement = () => {
                 name="name"
                 label="Full Name"
                 value={formData.name}
+                onChange={handleFormChange}
+                fullWidth
+                required
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                name="id"
+                label="User ID"
+                value={formData.id}
                 onChange={handleFormChange}
                 fullWidth
                 required
@@ -342,6 +401,20 @@ const UserManagement = () => {
                 </Select>
               </FormControl>
             </Grid>
+            
+            {/* Conditional field for Student Users */}
+            {formData.userType === 'studentUser' && (
+              <Grid item xs={12}>
+                <TextField
+                  name="department"
+                  label="Department"
+                  value={formData.department}
+                  onChange={handleFormChange}
+                  fullWidth
+                  required
+                />
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>
@@ -357,7 +430,7 @@ const UserManagement = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Revoke User Dialog */}
+      {/* Revoke User Dialog - mostly the same */}
       <Dialog open={openRevokeDialog} onClose={() => setOpenRevokeDialog(false)}>
         <DialogTitle>Revoke User Access</DialogTitle>
         <DialogContent>

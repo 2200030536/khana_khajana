@@ -90,7 +90,7 @@ const MessUserProfile = () => {
     
     try {
       // Use the user id from the state and make sure the API endpoint is correct
-      const response = await axiosInstance.put(`/messUsers/${user._id}`, formData);
+      const response = await axiosInstance.put(`/messUsers/${user.id}`, formData);
       setSuccess("Profile updated successfully!");
       setEditMode(false);
       fetchUserProfile();
@@ -197,7 +197,7 @@ const MessUserProfile = () => {
                   User ID
                 </Typography>
                 <Typography variant="h6">
-                  {user?._id}
+                  {user?.id}
                 </Typography>
               </Grid>
             </Grid>

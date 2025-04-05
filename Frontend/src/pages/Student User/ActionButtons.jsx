@@ -1,7 +1,14 @@
 import React from 'react';
 import { Box, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const ActionButtons = () => {
+  const navigate = useNavigate();
+
+  const handleBrowsePlans = () => {
+    navigate('/meals-plans');
+  };
+
   return (
     <Box
       sx={{
@@ -13,6 +20,7 @@ const ActionButtons = () => {
     >
       <Button
         variant="contained"
+        onClick={handleBrowsePlans}
         sx={{
           bgcolor: "#2196f3",
           color: "#fff",

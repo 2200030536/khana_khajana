@@ -11,7 +11,7 @@ import Signup from './pages/Signup';
 import StudentSignup from './components/StudentUserSignup';
 import MessUserSignup from './components/MessUserSignup';
 // import Profile from './components/Profile';
-import MessUser from './pages/Mess User/MessUser';
+// import MessUser from './pages/Mess User/MessUser';
 import AdminUser from './pages/Admin User/AdminUser';
 import './App.css';
 import About from './pages/About';
@@ -19,9 +19,10 @@ import Contact from './pages/Contact';
 import Menu from './pages/Menu';
 import MessUserProfile from './pages/Mess User/MessUserProfile';
 import MenuManager from './pages/Mess User/MenuManager';
-import ProfilePage from './pages/Student user/ProfilePage';
 import MessUserPage from './pages/Mess User/MessUserPage';
-
+import MealPlans from './pages/Student User/MealsPlans';
+import ProfilePage from './pages/Student User/ProfilePage';
+import ProfileDetails from './pages/Student User/ProfileDetails';
 
 
 
@@ -50,7 +51,9 @@ const App = () => {
         <Route path="/menu" element={<Menu />} />
         <Route path="/mess-user/profile" element={<MessUserProfile />} />
         <Route path="/menu-manager" element={<MenuManager />} />
-        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile" element={<ProfilePage/>} />
+        <Route path="/meals-plans" element={<MealPlans />} />
+        <Route path="/studentdetails" element={< ProfileDetails/>} />
 
 
 
