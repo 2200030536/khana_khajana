@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Divider, 
-  CircularProgress, 
+import { useNavigate } from 'react-router-dom';
+
+import {
+  Box,
+  Paper,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  Divider,
+  CircularProgress,
   Alert,
   List,
   ListItem,
@@ -16,13 +18,13 @@ import {
   Button,
   Chip
 } from '@mui/material';
-import { 
-  RestaurantMenu, 
-  Receipt, 
-  CalendarMonth, 
+import {
+  RestaurantMenu,
+  Receipt,
+  CalendarMonth,
   NotificationsActive,
   AccountBalanceWallet,
-  AccessTime 
+  AccessTime
 } from '@mui/icons-material';
 import axiosInstance from '../../axiosConfig';
 import { keyframes } from '@emotion/react';
@@ -39,6 +41,7 @@ const slideIn = keyframes`
 `;
 
 const StudentDashboard = () => {
+  const navigate = useNavigate();
   const [mealPlan, setMealPlan] = useState(null);
   const [todayMenu, setTodayMenu] = useState({
     breakfast: [],
@@ -58,73 +61,82 @@ const StudentDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     setError('');
-    
+
     try {
       // Get user profile to get the user ID
       const profileResponse = await axiosInstance.get("/auth/profile");
       const userData = profileResponse.data.user;
-      
+
       if (!userData || !userData.id) {
         throw new Error("User profile information is incomplete");
       }
-      
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayNumber = new Date().getDay() + 1;
+
       // Fetch all required data in parallel
       const [mealPlanResponse, menuResponse, transactionsResponse] = await Promise.all([
         axiosInstance.get(`/transactions/student/${userData.id}`),
-        axiosInstance.get('/menus/today'),
-        axiosInstance.get(`/transactions/student/${userData.id}/history`)
+        axiosInstance.get(`/menus/day/${dayNumber}`),
+        axiosInstance.get(`/transactions/student/${userData.id}`)
       ]);
-      
+
       // Process meal plan data
       setMealPlan(mealPlanResponse.data);
-      
+      // console.log(mealPlanResponse.data);
+
       // Process today's menu
       const menuData = menuResponse.data;
-      setTodayMenu({
-        breakfast: menuData.breakfast || [],
-        lunch: menuData.lunch || [],
-        snacks: menuData.snacks || [],
-        dinner: menuData.dinner || []
-      });
-      
-      // Process transactions
-      const transactions = transactionsResponse.data || [];
+      // console.log(menuData);
+      if (menuData) {
+        setTodayMenu({
+          breakfast: menuData.breakfast ? menuData.breakfast.split(',').map(item => item.trim()) : [],
+          lunch: menuData.lunch ? menuData.lunch.split(',').map(item => item.trim()) : [],
+          snacks: menuData.snacks ? menuData.snacks.split(',').map(item => item.trim()) : [],
+          dinner: menuData.dinner ? menuData.dinner.split(',').map(item => item.trim()) : []
+        });
+      }
+      // Process transactions - make sure it's an array before calling slice
+      const transactions = Array.isArray(transactionsResponse.data)
+        ? transactionsResponse.data
+        : transactionsResponse.data?.transactions || [];
+
       setRecentTransactions(transactions.slice(0, 5));
-      
+
       // Create some upcoming events based on meal times
       const currentDate = new Date();
       const upcomingMeals = [
-        { 
-          title: 'Breakfast', 
-          time: new Date(currentDate.setHours(8, 0, 0, 0)),
+        {
+          title: 'Breakfast',
+          time: new Date(new Date().setHours(8, 0, 0, 0)),
           icon: <RestaurantMenu />,
           color: '#42a5f5'
         },
-        { 
-          title: 'Lunch', 
-          time: new Date(currentDate.setHours(13, 0, 0, 0)),
+        {
+          title: 'Lunch',
+          time: new Date(new Date().setHours(13, 0, 0, 0)),
           icon: <RestaurantMenu />,
           color: '#ff9800'
         },
-        { 
-          title: 'Snacks', 
-          time: new Date(currentDate.setHours(16, 30, 0, 0)),
+        {
+          title: 'Snacks',
+          time: new Date(new Date().setHours(16, 30, 0, 0)),
           icon: <RestaurantMenu />,
           color: '#66bb6a'
         },
-        { 
-          title: 'Dinner', 
-          time: new Date(currentDate.setHours(20, 0, 0, 0)),
+        {
+          title: 'Dinner',
+          time: new Date(new Date().setHours(20, 0, 0, 0)),
           icon: <RestaurantMenu />,
           color: '#f44336'
         }
       ];
-      
+
+
       // Filter to only show upcoming meals
       const now = new Date();
       const upcomingMealsFiltered = upcomingMeals.filter(meal => meal.time > now);
       setUpcomingEvents(upcomingMealsFiltered);
-      
+
       setLoading(false);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -133,24 +145,24 @@ const StudentDashboard = () => {
     }
   };
 
+
   const formatMenuItems = (items) => {
     if (!items || !items.length) return "Not available";
     return items.join(", ");
   };
-
   const getDaysRemaining = () => {
     if (!mealPlan || !mealPlan.endDate) return 0;
-    
+
     const endDate = new Date(mealPlan.endDate);
     const today = new Date();
-    
+
     // Set time to midnight for both dates to get accurate day count
     endDate.setHours(0, 0, 0, 0);
     today.setHours(0, 0, 0, 0);
-    
+
     const diffTime = endDate - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     return diffDays > 0 ? diffDays : 0;
   };
 
@@ -162,7 +174,7 @@ const StudentDashboard = () => {
   const getMealTimingStatus = (mealType) => {
     const now = new Date();
     const hours = now.getHours();
-    
+
     if (mealType === 'breakfast' && hours >= 7 && hours < 10) {
       return { status: 'active', text: 'Available Now' };
     } else if (mealType === 'lunch' && hours >= 12 && hours < 15) {
@@ -172,10 +184,10 @@ const StudentDashboard = () => {
     } else if (mealType === 'dinner' && hours >= 19 && hours < 22) {
       return { status: 'active', text: 'Available Now' };
     }
-    
+
     return { status: 'inactive', text: 'Check Schedule' };
   };
-  
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="80vh">
@@ -186,7 +198,7 @@ const StudentDashboard = () => {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
-      <Typography variant="h4" mb={4} fontWeight="bold" 
+      <Typography variant="h4" mb={4} fontWeight="bold"
         sx={{ animation: `${fadeIn} 0.5s ease-out` }}>
         Student Dashboard
       </Typography>
@@ -228,9 +240,9 @@ const StudentDashboard = () => {
                       End: {formatDate(mealPlan.endDate)}
                     </Typography>
                     {mealPlan.planType && (
-                      <Chip 
+                      <Chip
                         label={mealPlan.planType}
-                        size="small" 
+                        size="small"
                         sx={{ mt: 1, bgcolor: 'rgba(255, 255, 255, 0.25)' }}
                       />
                     )}
@@ -241,10 +253,10 @@ const StudentDashboard = () => {
                   <Typography variant="h6" align="center" sx={{ mb: 2 }}>
                     No Active Meal Plan
                   </Typography>
-                  <Button 
-                    variant="contained" 
+                  <Button
+                    variant="contained"
                     fullWidth
-                    sx={{ 
+                    sx={{
                       bgcolor: 'rgba(255, 255, 255, 0.2)',
                       '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
                     }}
@@ -256,7 +268,7 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         {/* Today's Schedule */}
         <Grid item xs={12} sm={6} md={4}>
           <Card elevation={3} sx={{
@@ -271,12 +283,12 @@ const StudentDashboard = () => {
                 <CalendarMonth sx={{ fontSize: 40, mr: 2 }} />
                 <Typography variant="h6">Today's Schedule</Typography>
               </Box>
-              
+
               <List dense>
                 {upcomingEvents.length > 0 ? (
                   upcomingEvents.map((event, index) => (
-                    <ListItem key={index} sx={{ 
-                      py: 0.5, 
+                    <ListItem key={index} sx={{
+                      py: 0.5,
                       borderRadius: 1,
                       bgcolor: 'rgba(255, 255, 255, 0.1)',
                       mb: 1,
@@ -285,8 +297,8 @@ const StudentDashboard = () => {
                       <ListItemIcon sx={{ minWidth: 40, color: 'white' }}>
                         <AccessTime />
                       </ListItemIcon>
-                      <ListItemText 
-                        primary={event.title} 
+                      <ListItemText
+                        primary={event.title}
                         secondary={
                           <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                             {event.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -304,7 +316,7 @@ const StudentDashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        
+
         {/* Recent Transactions */}
         <Grid item xs={12} md={4}>
           <Card elevation={3} sx={{
@@ -319,29 +331,29 @@ const StudentDashboard = () => {
                 <Receipt sx={{ fontSize: 40, mr: 2 }} />
                 <Typography variant="h6">Recent Transactions</Typography>
               </Box>
-              
+
               {recentTransactions.length > 0 ? (
                 <List dense>
                   {recentTransactions.map((transaction, index) => (
-                    <ListItem key={index} sx={{ 
-                      py: 0.5, 
+                    <ListItem key={index} sx={{
+                      py: 0.5,
                       borderRadius: 1,
                       bgcolor: 'rgba(255, 255, 255, 0.1)',
                       mb: 1,
                       animation: `${slideIn} ${0.3 + index * 0.1}s ease-out`
                     }}>
-                      <ListItemText 
-                        primary={`₹${transaction.amount}`} 
+                      <ListItemText
+                        primary={`₹${transaction.amount}`}
                         secondary={
                           <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                             {formatDate(transaction.date)}
                           </Typography>
                         }
                       />
-                      <Chip 
-                        label={transaction.status || 'Completed'} 
+                      <Chip
+                        label={transaction.status || 'Completed'}
                         size="small"
-                        sx={{ 
+                        sx={{
                           bgcolor: transaction.status === 'pending' ? 'warning.light' : 'success.light',
                           color: 'white',
                           fontSize: '0.7rem'
@@ -361,10 +373,10 @@ const StudentDashboard = () => {
       </Grid>
 
       {/* Today's Menu */}
-      <Paper 
-        elevation={3} 
-        sx={{ 
-          p: 3, 
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
           mb: 4,
           animation: `${fadeIn} 0.7s ease-out`,
           background: 'white',
@@ -377,16 +389,16 @@ const StudentDashboard = () => {
           Today's Menu
         </Typography>
         <Divider sx={{ mb: 3 }} />
-        
+
         <Grid container spacing={3}>
           {/* Breakfast */}
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2} sx={{ 
-              p: 2, 
+            <Card elevation={2} sx={{
+              p: 2,
               borderLeft: '4px solid #42a5f5',
               height: '100%',
               transition: 'all 0.3s',
-              '&:hover': { 
+              '&:hover': {
                 transform: 'translateY(-5px)',
                 boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
               }
@@ -394,7 +406,7 @@ const StudentDashboard = () => {
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="h6" fontWeight="bold">Breakfast</Typography>
                 {getMealTimingStatus('breakfast').status === 'active' ? (
-                  <Chip 
+                  <Chip
                     label={getMealTimingStatus('breakfast').text}
                     size="small"
                     sx={{ bgcolor: '#42a5f5', color: 'white' }}
@@ -410,15 +422,15 @@ const StudentDashboard = () => {
               </Typography>
             </Card>
           </Grid>
-          
+
           {/* Lunch */}
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2} sx={{ 
-              p: 2, 
+            <Card elevation={2} sx={{
+              p: 2,
               borderLeft: '4px solid #ff9800',
               height: '100%',
               transition: 'all 0.3s',
-              '&:hover': { 
+              '&:hover': {
                 transform: 'translateY(-5px)',
                 boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
               }
@@ -426,7 +438,7 @@ const StudentDashboard = () => {
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="h6" fontWeight="bold">Lunch</Typography>
                 {getMealTimingStatus('lunch').status === 'active' ? (
-                  <Chip 
+                  <Chip
                     label={getMealTimingStatus('lunch').text}
                     size="small"
                     sx={{ bgcolor: '#ff9800', color: 'white' }}
@@ -442,15 +454,15 @@ const StudentDashboard = () => {
               </Typography>
             </Card>
           </Grid>
-          
+
           {/* Snacks */}
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2} sx={{ 
-              p: 2, 
+            <Card elevation={2} sx={{
+              p: 2,
               borderLeft: '4px solid #66bb6a',
               height: '100%',
               transition: 'all 0.3s',
-              '&:hover': { 
+              '&:hover': {
                 transform: 'translateY(-5px)',
                 boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
               }
@@ -458,7 +470,7 @@ const StudentDashboard = () => {
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="h6" fontWeight="bold">Snacks</Typography>
                 {getMealTimingStatus('snacks').status === 'active' ? (
-                  <Chip 
+                  <Chip
                     label={getMealTimingStatus('snacks').text}
                     size="small"
                     sx={{ bgcolor: '#66bb6a', color: 'white' }}
@@ -474,15 +486,15 @@ const StudentDashboard = () => {
               </Typography>
             </Card>
           </Grid>
-          
+
           {/* Dinner */}
           <Grid item xs={12} sm={6} md={3}>
-            <Card elevation={2} sx={{ 
-              p: 2, 
+            <Card elevation={2} sx={{
+              p: 2,
               borderLeft: '4px solid #f44336',
               height: '100%',
               transition: 'all 0.3s',
-              '&:hover': { 
+              '&:hover': {
                 transform: 'translateY(-5px)',
                 boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
               }
@@ -490,7 +502,7 @@ const StudentDashboard = () => {
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                 <Typography variant="h6" fontWeight="bold">Dinner</Typography>
                 {getMealTimingStatus('dinner').status === 'active' ? (
-                  <Chip 
+                  <Chip
                     label={getMealTimingStatus('dinner').text}
                     size="small"
                     sx={{ bgcolor: '#f44336', color: 'white' }}
@@ -510,7 +522,7 @@ const StudentDashboard = () => {
       </Paper>
 
       {/* Quick Actions */}
-      <Paper 
+      {/* <Paper 
         elevation={3} 
         sx={{ 
           p: 3,
@@ -532,6 +544,7 @@ const StudentDashboard = () => {
               color="primary" 
               fullWidth
               startIcon={<RestaurantMenu />}
+              onClick={() => navigate('/menu')}
               sx={{ 
                 py: 1.5, 
                 bgcolor: '#1976d2',
@@ -561,6 +574,7 @@ const StudentDashboard = () => {
               variant="contained" 
               fullWidth
               startIcon={<CalendarMonth />}
+              onClick={() => navigate('/meals-plans')}
               sx={{ 
                 py: 1.5, 
                 bgcolor: '#ff9800',
@@ -575,6 +589,7 @@ const StudentDashboard = () => {
               variant="contained" 
               fullWidth
               startIcon={<NotificationsActive />}
+              onClick={() => navigate('/contact')}
               sx={{ 
                 py: 1.5, 
                 bgcolor: '#f44336',
@@ -585,7 +600,7 @@ const StudentDashboard = () => {
             </Button>
           </Grid>
         </Grid>
-      </Paper>
+      </Paper> */}
     </Box>
   );
 };

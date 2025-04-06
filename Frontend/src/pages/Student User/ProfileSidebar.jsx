@@ -1,4 +1,6 @@
 import React from "react";
+import axiosInstance from "../../axiosConfig";
+import { useNavigate } from "react-router-dom";
 import {
   Box, 
   Typography, 
@@ -16,7 +18,9 @@ import {
   Edit as EditIcon,
   Receipt as ReceiptIcon,
   MenuBook as MenuBookIcon,
-  ShoppingCart as ShoppingCartIcon
+  ShoppingCart as ShoppingCartIcon,
+  Logout as LogoutIcon
+  
 } from "@mui/icons-material";
 import { keyframes } from "@emotion/react";
 
@@ -27,7 +31,20 @@ const pulse = keyframes`
   100% { transform: scale(1); }
 `;
 
+
 const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveItem, fadeIn }) => {
+    const navigate = useNavigate();
+    const handleLogout = async () => {
+      try {
+        await axiosInstance.post("/auth/logout");
+        alert("Logout successful");
+        navigate("/login");
+      } catch (error) {
+        console.error("Error during logout:", error);
+        alert("Failed to logout. Please try again.");
+      }
+    };
+  
   const menuItems = [
     { label: "Dashboard", icon: <DashboardIcon />, key: "dashboard"},
     { label: "Browse Plans", icon: <ShoppingCartIcon />, key: "browsePlans"},
@@ -119,6 +136,31 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
           </ListItem>
         ))}
       </List>
+      <Box sx={{ mt: "auto", p: 2 }}>
+              <Button
+                variant="contained"
+                color="error"
+                fullWidth
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                sx={{
+                  backgroundColor: "#d84315",
+                  color: "#fff",
+                  fontWeight: "bold",
+                  borderRadius: 2,
+                  py: 1,
+                  transition: "all 0.3s ease",
+                  boxShadow: "0 4px 12px rgba(216, 67, 21, 0.3)",
+                  "&:hover": {
+                    backgroundColor: "#bf360c",
+                    transform: "translateY(-3px)",
+                    boxShadow: "0 6px 15px rgba(216, 67, 21, 0.4)",
+                  }
+                }}
+              >
+                Logout
+              </Button>
+            </Box>
     </Drawer>
   );
 };

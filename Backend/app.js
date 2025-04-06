@@ -11,6 +11,8 @@ import studentTransactionRoutes from './routes/studentTransactionRoutes.js';
 import dailyMenuRoutes from './routes/dailyMenuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import priceRoutes from './routes/priceRoutes.js';
+import contactRoutes from './routes/contactRoutes.js'; // Add this line
+
 
 
 const app = express();
@@ -50,6 +52,7 @@ app.use('/menus', dailyMenuRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/prices', priceRoutes);
 app.use('/api/daily-menus', dailyMenuRoutes);
+app.use('/api/contacts', contactRoutes); // Add this line
 
 // Serve the HTML file
 const __filename = fileURLToPath(import.meta.url);

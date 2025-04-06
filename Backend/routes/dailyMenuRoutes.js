@@ -35,6 +35,32 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get a DailyMenu by day number (0-6, Sunday-Saturday)
+router.get('/day-number/:dayNumber', async (req, res) => {
+  try {
+    const dayNumber = parseInt(req.params.dayNumber);
+    
+    // Validate day number input
+    if (isNaN(dayNumber) || dayNumber < 0 || dayNumber > 6) {
+      return res.status(400).json({ error: 'Day number must be between 0 and 6' });
+    }
+    
+    // Convert day number to day name
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[dayNumber];
+    
+    // Find menu by day name
+    const menu = await DailyMenu.findOne({ day: dayName });
+    if (!menu) {
+      return res.status(404).json({ error: `DailyMenu not found for ${dayName}` });
+    }
+    
+    res.status(200).json(menu);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Get a DailyMenu by day
 router.get('/day/:day', async (req, res) => {
   try {

@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Grid, 
-  Card, 
-  CardContent, 
-  CardHeader, 
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardHeader,
   CardActions,
-  Button, 
+  Button,
   Chip,
   CircularProgress,
-  Alert, 
+  Alert,
   Tabs,
   Tab,
   Divider,
@@ -25,17 +25,15 @@ import {
   Checkbox,
   FormGroup,
   FormControl,
-  InputLabel,
   Select,
-  MenuItem,
-  TextField
+  MenuItem
 } from '@mui/material';
-import { 
+import {
   Restaurant as RestaurantIcon,
   CheckCircle as CheckCircleIcon,
   FreeBreakfast as BreakfastIcon,
   LunchDining as LunchIcon,
-  DinnerDining as DinnerIcon, // Fixed: Using DinnerDining instead of Dinner
+  DinnerDining as DinnerIcon,
   DateRange as DateRangeIcon,
   ShoppingCart as CartIcon
 } from '@mui/icons-material';
@@ -43,8 +41,11 @@ import { format, addDays, addWeeks, addMonths } from 'date-fns';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import axiosInstance from '../../axiosConfig';
+import { useNavigate } from 'react-router-dom';
 
 const MealPlans = () => {
+  const navigate = useNavigate();
+
   // State for pricing data
   const [prices, setPrices] = useState({
     breakfast: 50,
@@ -76,15 +77,19 @@ const MealPlans = () => {
       }
     }
   });
-  
-  const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading] = useState(true);
+  const [loadingPlan, setLoadingPlan] = useState(false);
   const [error, setError] = useState('');
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState(null);
+  const [activeMealPlan, setActiveMealPlan] = useState(null);
+
   // UI state
   const [activeTab, setActiveTab] = useState(0);
   const [isVegetarian, setIsVegetarian] = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  
+
   // Selected plan state
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [mealSelections, setMealSelections] = useState({
@@ -95,26 +100,66 @@ const MealPlans = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [paymentMethod, setPaymentMethod] = useState('upi');
 
+  // Fetch user data and check authentication status
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch profile data
+        const profileResponse = await axiosInstance.get("/auth/profile");
+        const userData = profileResponse.data.user;
+        setUser(userData);
+        setIsLoggedIn(true);
+
+        // Fetch transaction status if user is a student
+        if (userData.userType === "studentUser") {
+          try {
+            const transactionResponse = await axiosInstance.get(
+              `/transactions/student/${userData.id}`
+            );
+            const studentTransaction = transactionResponse.data;
+
+            if (studentTransaction) {
+              const currentDate = new Date();
+              const endDate = new Date(studentTransaction.endDate);
+              
+              // Only set as active meal plan if end date is in the future
+              if (endDate >= currentDate) {
+                setActiveMealPlan(studentTransaction);
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching transaction:", err);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        setIsLoggedIn(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   // Fetch price data
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        setLoading(true);
-        // Commented out actual API call for now to use mock data
-        // const response = await axiosInstance.get('/api/prices/current');
-        // setPrices(response.data);
-        
-        // Simulate API delay with mock data
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
+        const response = await axiosInstance.get('/api/prices/current');
+
+        // If API call succeeds, use the response data
+        if (response && response.data) {
+          setPrices(response.data);
+        }
       } catch (err) {
         console.error('Error fetching prices:', err);
-        setError('Failed to load meal plan prices. Please try again later.');
-        setLoading(false);
+        // Keep using default prices if API fails
+        setError('Failed to load meal plan prices. Using default pricing.');
+        setTimeout(() => setError(''), 5000);
       }
     };
-    
+
     fetchPrices();
   }, []);
 
@@ -139,7 +184,7 @@ const MealPlans = () => {
   // Calculate end date based on plan type
   const getEndDate = () => {
     if (!selectedPlan) return new Date();
-    
+
     switch (selectedPlan.type) {
       case 'daily':
         return addDays(startDate, 1);
@@ -153,11 +198,11 @@ const MealPlans = () => {
         return addDays(startDate, 1);
     }
   };
-  
+
   // Get number of days in the plan
   const getNumberOfDays = () => {
     if (!selectedPlan) return 1;
-    
+
     switch (selectedPlan.type) {
       case 'daily': return 1;
       case 'weekly': return 7;
@@ -169,58 +214,135 @@ const MealPlans = () => {
 
   // Open checkout dialog
   const handleSelectPlan = (planType) => {
+    if (!isLoggedIn) {
+      // Prompt user to login
+      setError('Please log in to subscribe to a meal plan.');
+      setTimeout(() => {
+        setError('');
+        navigate('/login');
+      }, 2000);
+      return;
+    }
+
+    // Check if user already has an active plan
+    if (activeMealPlan) {
+      setError(`You already have an active ${activeMealPlan.planType} plan that expires on ${format(new Date(activeMealPlan.endDate), 'MMM dd, yyyy')}.`);
+      setTimeout(() => setError(''), 8000);
+      return;
+    }
+
     setSelectedPlan({
       type: planType,
-      price: isVegetarian ? 
-        prices.plans[planType].vegetarian : 
+      price: isVegetarian ?
+        prices.plans[planType].vegetarian :
         prices.plans[planType].nonVegetarian
     });
     setCheckoutOpen(true);
   };
-  
+
   // Calculate adjusted price based on selections
   const calculateAdjustedPrice = (basePlanPrice) => {
     if (!selectedPlan) return basePlanPrice;
-    
+
     let totalPrice = basePlanPrice;
-    
+
     // Simple calculation - if a meal is deselected, reduce by percentage
     if (!mealSelections.breakfast) {
       totalPrice = totalPrice * 0.85; // Reduce by 15%
     }
-    
+
     if (!mealSelections.lunch) {
       totalPrice = totalPrice * 0.75; // Reduce by 25%
     }
-    
+
     if (!mealSelections.dinner) {
       totalPrice = totalPrice * 0.75; // Reduce by 25%
     }
-    
+
     return Math.round(totalPrice);
   };
 
   // Submit plan purchase
-  const handleSubmitPurchase = () => {
-    // In a real app, you'd send an API request here
-    alert('Thank you for your purchase! Your meal plan will be activated soon.');
-    setCheckoutOpen(false);
+  const handleSubmitPurchase = async () => {
+    try {
+      setError('');
+      setLoading(true);
+
+      if (!isLoggedIn || !user) {
+        setError('You must be logged in to purchase a meal plan.');
+        setLoading(false);
+        setTimeout(() => {
+          setError('');
+          setCheckoutOpen(false);
+          navigate('/login');
+        }, 2000);
+        return;
+      }
+
+      // Check that at least one meal is selected
+      if (!mealSelections.breakfast && !mealSelections.lunch && !mealSelections.dinner) {
+        setError('Please select at least one meal type.');
+        setLoading(false);
+        return;
+      }
+
+      const transactionData = {
+        studentId: parseInt(user.id),
+        planType: selectedPlan.type,
+        breakfast: mealSelections.breakfast,
+        lunch: mealSelections.lunch,
+        dinner: mealSelections.dinner,
+        startDate: startDate.toISOString(),
+        endDate: getEndDate().toISOString(),
+        amount: calculateAdjustedPrice(selectedPlan.price),
+        paymentStatus: 'pending',
+        paymentMethod: paymentMethod,
+        status: 'active'
+      };
+
+      console.log('Sending transaction data:', transactionData);
+
+      // Send the transaction to the server with credentials
+      const response = await axiosInstance.post('/transactions', transactionData, {
+        withCredentials: true
+      });
+
+      console.log('Transaction created:', response.data);
+
+      // Update the active meal plan
+      setActiveMealPlan(response.data);
+
+      // Show success message and close dialog
+      alert('Thank you for your purchase! Your meal plan will be activated soon.');
+      setCheckoutOpen(false);
+    } catch (err) {
+      console.error('Error submitting transaction:', err);
+
+      // Provide specific error message if available
+      if (err.response && err.response.data && err.response.data.error) {
+        setError(err.response.data.error);
+      } else {
+        setError('Failed to process your transaction. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Render price card for one plan type
   const renderPlanCard = (planType, icon, title, description) => {
     if (!prices) return null;
-    
-    const price = isVegetarian ? 
-      prices.plans[planType].vegetarian : 
+
+    const price = isVegetarian ?
+      prices.plans[planType].vegetarian :
       prices.plans[planType].nonVegetarian;
-    
+
     return (
-      <Card 
-        elevation={3} 
-        sx={{ 
-          height: '100%', 
-          display: 'flex', 
+      <Card
+        elevation={3}
+        sx={{
+          height: '100%',
+          display: 'flex',
           flexDirection: 'column',
           transition: 'transform 0.3s, box-shadow 0.3s',
           '&:hover': {
@@ -237,16 +359,16 @@ const MealPlans = () => {
           <Chip
             label="Best Value"
             color="error"
-            sx={{ 
-              position: 'absolute', 
-              top: -12, 
+            sx={{
+              position: 'absolute',
+              top: -12,
               right: 16,
               fontWeight: 'bold',
               boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
             }}
           />
         )}
-        
+
         <CardHeader
           avatar={icon}
           title={
@@ -254,82 +376,83 @@ const MealPlans = () => {
               {title}
             </Typography>
           }
-          sx={{ 
+          sx={{
             bgcolor: planType === 'semester' ? '#fff8e1' : 'transparent',
             borderBottom: '1px solid #f0f0f0'
           }}
         />
-        
+
         <CardContent sx={{ flexGrow: 1, pt: 3 }}>
           <Box mb={2}>
-            <Typography 
-              variant="h4" 
-              component="div" 
-              fontWeight="bold" 
+            <Typography
+              variant="h4"
+              component="div"
+              fontWeight="bold"
               color="#f57c00"
             >
               ₹{price.toLocaleString()}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {planType === 'daily' ? 'per day' : 
-               planType === 'weekly' ? 'per week' : 
-               planType === 'monthly' ? 'per month' : 
-               'per semester'}
+              {planType === 'daily' ? 'per day' :
+                planType === 'weekly' ? 'per week' :
+                  planType === 'monthly' ? 'per month' :
+                    'per semester'}
             </Typography>
           </Box>
-          
+
           <Typography variant="body2" color="text.secondary" mb={2}>
             {description}
           </Typography>
-          
+
           <Box mt={2}>
             {/* Plan features */}
             <Box display="flex" alignItems="center" mb={1}>
               <CheckCircleIcon fontSize="small" sx={{ color: 'success.main', mr: 1 }} />
               <Typography variant="body2">
-                {planType === 'daily' ? '3 meals for a day' : 
-                 planType === 'weekly' ? '21 meals for a week' : 
-                 planType === 'monthly' ? '90 meals for a month' : 
-                 '540+ meals for a semester'}
+                {planType === 'daily' ? '3 meals for a day' :
+                  planType === 'weekly' ? '21 meals for a week' :
+                    planType === 'monthly' ? '90 meals for a month' :
+                      '540+ meals for a semester'}
               </Typography>
             </Box>
-            
+
             <Box display="flex" alignItems="center" mb={1}>
               <CheckCircleIcon fontSize="small" sx={{ color: 'success.main', mr: 1 }} />
               <Typography variant="body2">
                 {isVegetarian ? 'Vegetarian meals' : 'Non-vegetarian option'}
               </Typography>
             </Box>
-            
+
             <Box display="flex" alignItems="center">
               <CheckCircleIcon fontSize="small" sx={{ color: 'success.main', mr: 1 }} />
               <Typography variant="body2">
-                {planType !== 'daily' ? 'Save up to ' + 
-                  (planType === 'weekly' ? '10%' : 
-                   planType === 'monthly' ? '15%' : '25%') : 
+                {planType !== 'daily' ? 'Save up to ' +
+                  (planType === 'weekly' ? '10%' :
+                    planType === 'monthly' ? '15%' : '25%') :
                   'Flexible meal choice'}
               </Typography>
             </Box>
           </Box>
         </CardContent>
-        
+
         <CardActions sx={{ p: 2, pt: 0 }}>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             fullWidth
             color="primary"
             size="large"
             onClick={() => handleSelectPlan(planType)}
-            sx={{ 
-              bgcolor: '#f57c00',
-              '&:hover': { bgcolor: '#e65100' },
+            disabled={!!activeMealPlan}
+            sx={{
+              bgcolor: activeMealPlan ? 'grey.400' : '#f57c00',
+              '&:hover': { bgcolor: activeMealPlan ? 'grey.500' : '#e65100' },
               py: 1.5,
               fontWeight: 'medium',
               borderRadius: 2
             }}
-            startIcon={<CartIcon />}
+            startIcon={activeMealPlan ? null : <CartIcon />}
           >
-            Subscribe Now
+            {activeMealPlan ? 'Already Subscribed' : 'Subscribe Now'}
           </Button>
         </CardActions>
       </Card>
@@ -339,34 +462,63 @@ const MealPlans = () => {
   return (
     <Container maxWidth="lg">
       <Box pt={4} pb={8}>
-        <Typography 
-          variant="h4" 
-          gutterBottom 
+        <Typography
+          variant="h4"
+          gutterBottom
           sx={{ fontWeight: 'bold', mb: 1 }}
         >
           Meal Plan Subscriptions
         </Typography>
-        
-        <Typography 
-          variant="subtitle1" 
+
+        <Typography
+          variant="subtitle1"
           color="text.secondary"
           sx={{ mb: 4 }}
         >
           Choose the perfect meal plan that fits your schedule and budget
         </Typography>
-        
+
+        {/* Login status indicator */}
+        {!isLoggedIn && (
+          <Alert
+            severity="info"
+            sx={{ mb: 3 }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => navigate('/login')}
+              >
+                LOGIN
+              </Button>
+            }
+          >
+            Please log in to subscribe to a meal plan
+          </Alert>
+        )}
+
+        {/* Active meal plan notification */}
+        {isLoggedIn && activeMealPlan && (
+          <Alert
+            severity="success"
+            sx={{ mb: 3 }}
+          >
+            You have an active {activeMealPlan.planType} plan until {format(new Date(activeMealPlan.endDate), 'MMM dd, yyyy')}
+          </Alert>
+        )}
+
         {/* Diet preference toggle */}
-        <Box 
-          mb={4} 
-          mt={2} 
-          display="flex" 
+        <Box
+          mb={4}
+          mt={2}
+          display="flex"
           justifyContent="flex-end"
         >
-          <Paper 
+          <Paper
             elevation={1}
-            sx={{ 
-              p: 1, 
-              px: 2, 
+            sx={{
+              p: 1,
+              px: 2,
               borderRadius: 3,
               display: 'flex',
               alignItems: 'center'
@@ -375,7 +527,7 @@ const MealPlans = () => {
             <Typography variant="body2" sx={{ mr: 1 }}>Diet Preference:</Typography>
             <FormControlLabel
               control={
-                <Switch 
+                <Switch
                   checked={!isVegetarian}
                   onChange={handleDietToggle}
                   color="primary"
@@ -395,22 +547,22 @@ const MealPlans = () => {
             />
           </Paper>
         </Box>
-        
+
         {/* Error message */}
         {error && (
-          <Alert 
-            severity="error" 
+          <Alert
+            severity="error"
             sx={{ mb: 4 }}
             onClose={() => setError('')}
           >
             {error}
           </Alert>
         )}
-        
+
         {/* Plan duration tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-          <Tabs 
-            value={activeTab} 
+          <Tabs
+            value={activeTab}
             onChange={handleTabChange}
             variant="fullWidth"
             indicatorColor="primary"
@@ -423,7 +575,7 @@ const MealPlans = () => {
             <Tab label="Semester Plans" />
           </Tabs>
         </Box>
-        
+
         {/* Loading state */}
         {loading ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
@@ -443,7 +595,7 @@ const MealPlans = () => {
                 )}
               </Grid>
             )}
-            
+
             {/* Weekly Plan */}
             {(activeTab === 0 || activeTab === 2) && (
               <Grid item xs={12} sm={6} md={3}>
@@ -455,7 +607,7 @@ const MealPlans = () => {
                 )}
               </Grid>
             )}
-            
+
             {/* Monthly Plan */}
             {(activeTab === 0 || activeTab === 3) && (
               <Grid item xs={12} sm={6} md={3}>
@@ -467,7 +619,7 @@ const MealPlans = () => {
                 )}
               </Grid>
             )}
-            
+
             {/* Semester Plan */}
             {(activeTab === 0 || activeTab === 4) && (
               <Grid item xs={12} sm={6} md={3}>
@@ -481,14 +633,15 @@ const MealPlans = () => {
             )}
           </Grid>
         )}
-        
+
+        {/* Rest of the component remains unchanged */}
         {/* Benefits section */}
         <Box mt={8}>
           <Divider sx={{ mb: 4 }} />
           <Typography variant="h5" gutterBottom fontWeight="bold">
             Why Choose Our Meal Plans?
           </Typography>
-          
+
           <Grid container spacing={4} mt={2}>
             <Grid item xs={12} sm={6} md={3}>
               <Box textAlign="center">
@@ -499,7 +652,7 @@ const MealPlans = () => {
                 </Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={12} sm={6} md={3}>
               <Box textAlign="center">
                 <LunchIcon sx={{ fontSize: 48, color: '#f57c00', mb: 2 }} />
@@ -509,7 +662,7 @@ const MealPlans = () => {
                 </Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={12} sm={6} md={3}>
               <Box textAlign="center">
                 <DinnerIcon sx={{ fontSize: 48, color: '#f57c00', mb: 2 }} />
@@ -519,7 +672,7 @@ const MealPlans = () => {
                 </Typography>
               </Box>
             </Grid>
-            
+
             <Grid item xs={12} sm={6} md={3}>
               <Box textAlign="center">
                 <DateRangeIcon sx={{ fontSize: 48, color: '#f57c00', mb: 2 }} />
@@ -531,10 +684,10 @@ const MealPlans = () => {
             </Grid>
           </Grid>
         </Box>
-        
+
         {/* Checkout Dialog */}
-        <Dialog 
-          open={checkoutOpen} 
+        <Dialog
+          open={checkoutOpen}
           onClose={() => setCheckoutOpen(false)}
           fullWidth
           maxWidth="sm"
@@ -544,14 +697,14 @@ const MealPlans = () => {
               Complete Your Subscription
             </Typography>
           </DialogTitle>
-          
+
           <DialogContent dividers>
             {selectedPlan && (
               <>
                 <Typography variant="h6" gutterBottom>
                   {selectedPlan.type.charAt(0).toUpperCase() + selectedPlan.type.slice(1)} Plan Details
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
                     <Typography variant="body2" fontWeight="medium" color="text.secondary">
@@ -561,36 +714,36 @@ const MealPlans = () => {
                       {isVegetarian ? 'Vegetarian' : 'Non-Vegetarian'}
                     </Typography>
                   </Grid>
-                  
+
                   <Grid item xs={12} sm={6}>
                     <Typography variant="body2" fontWeight="medium" color="text.secondary">
                       Duration:
                     </Typography>
                     <Typography variant="body1">
-                      {selectedPlan.type === 'daily' ? '1 Day' : 
-                       selectedPlan.type === 'weekly' ? '7 Days' : 
-                       selectedPlan.type === 'monthly' ? '30 Days' : 
-                       '6 Months'}
+                      {selectedPlan.type === 'daily' ? '1 Day' :
+                        selectedPlan.type === 'weekly' ? '7 Days' :
+                          selectedPlan.type === 'monthly' ? '30 Days' :
+                            '6 Months'}
                     </Typography>
                   </Grid>
                 </Grid>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Typography variant="h6" gutterBottom>
                   Customize Your Plan
                 </Typography>
-                
+
                 <FormGroup>
                   <Box mb={2}>
                     <Typography variant="body2" fontWeight="medium" color="text.secondary" mb={1}>
                       Select Meals:
                     </Typography>
-                    
+
                     <Box display="flex" flexWrap="wrap" gap={2}>
                       <FormControlLabel
                         control={
-                          <Checkbox 
+                          <Checkbox
                             checked={mealSelections.breakfast}
                             onChange={() => handleMealSelectionChange('breakfast')}
                             color="primary"
@@ -603,10 +756,10 @@ const MealPlans = () => {
                           </Box>
                         }
                       />
-                      
+
                       <FormControlLabel
                         control={
-                          <Checkbox 
+                          <Checkbox
                             checked={mealSelections.lunch}
                             onChange={() => handleMealSelectionChange('lunch')}
                             color="primary"
@@ -619,10 +772,10 @@ const MealPlans = () => {
                           </Box>
                         }
                       />
-                      
+
                       <FormControlLabel
                         control={
-                          <Checkbox 
+                          <Checkbox
                             checked={mealSelections.dinner}
                             onChange={() => handleMealSelectionChange('dinner')}
                             color="primary"
@@ -638,12 +791,12 @@ const MealPlans = () => {
                     </Box>
                   </Box>
                 </FormGroup>
-                
+
                 <Box mb={3}>
                   <Typography variant="body2" fontWeight="medium" color="text.secondary" mb={1}>
                     Starting Date:
                   </Typography>
-                  
+
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <DatePicker
                       value={startDate}
@@ -652,17 +805,17 @@ const MealPlans = () => {
                       slotProps={{ textField: { fullWidth: true } }}
                     />
                   </LocalizationProvider>
-                  
+
                   <Typography variant="caption" color="text.secondary">
                     Your plan will be active from {format(startDate, 'MMM dd, yyyy')} to {format(getEndDate(), 'MMM dd, yyyy')}
                   </Typography>
                 </Box>
-                
+
                 <Box mb={3}>
                   <Typography variant="body2" fontWeight="medium" color="text.secondary" mb={1}>
                     Payment Method:
                   </Typography>
-                  
+
                   <FormControl fullWidth>
                     <Select
                       value={paymentMethod}
@@ -675,19 +828,19 @@ const MealPlans = () => {
                     </Select>
                   </FormControl>
                 </Box>
-                
+
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Box backgroundColor="#f8f8f8" p={2} borderRadius={1}>
                   <Typography variant="h6" gutterBottom>
                     Order Summary
                   </Typography>
-                  
+
                   <Box display="flex" justifyContent="space-between" mb={1}>
                     <Typography variant="body2">Base Plan Price:</Typography>
                     <Typography variant="body2">₹{selectedPlan.price.toLocaleString()}</Typography>
                   </Box>
-                  
+
                   {(!mealSelections.breakfast || !mealSelections.lunch || !mealSelections.dinner) && (
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">Meal Selection Adjustment:</Typography>
@@ -696,9 +849,9 @@ const MealPlans = () => {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   <Divider sx={{ my: 1 }} />
-                  
+
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="body1" fontWeight="bold">Total Amount:</Typography>
                     <Typography variant="body1" fontWeight="bold" color="primary">
@@ -706,7 +859,7 @@ const MealPlans = () => {
                     </Typography>
                   </Box>
                 </Box>
-                
+
                 {error && (
                   <Alert severity="error" sx={{ mt: 2 }}>
                     {error}
@@ -715,25 +868,26 @@ const MealPlans = () => {
               </>
             )}
           </DialogContent>
-          
+
           <DialogActions sx={{ p: 2 }}>
-            <Button 
+            <Button
               onClick={() => setCheckoutOpen(false)}
               variant="outlined"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSubmitPurchase}
               variant="contained"
               color="primary"
-              sx={{ 
+              disabled={loading}
+              sx={{
                 bgcolor: '#f57c00',
                 '&:hover': { bgcolor: '#e65100' },
               }}
-              startIcon={<CartIcon />}
+              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CartIcon />}
             >
-              Complete Purchase
+              {loading ? 'Processing...' : 'Complete Purchase'}
             </Button>
           </DialogActions>
         </Dialog>
