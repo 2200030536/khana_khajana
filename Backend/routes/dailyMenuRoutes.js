@@ -1,6 +1,6 @@
 import express from 'express';
 import DailyMenu from '../schemas/DailyMenu.js';
-
+import { studentTransaction } from '../controllers/student.controller.js';
 const router = express.Router();
 
 // Create a new DailyMenu
@@ -104,5 +104,7 @@ router.delete('/day/:day', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+router.get('/latestTransaction', studentTransaction);
 
 export default router;

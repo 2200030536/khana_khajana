@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+//   line 77 (latestTransactionData) se data lena hai, line 368 mai data daalna hai
 import {
   Box,
   Paper,
@@ -74,10 +74,11 @@ const StudentDashboard = () => {
       const dayNumber = new Date().getDay() + 1;
 
       // Fetch all required data in parallel
-      const [mealPlanResponse, menuResponse, transactionsResponse] = await Promise.all([
+      const [mealPlanResponse, menuResponse, transactionsResponse, latestTransactionData] = await Promise.all([
         axiosInstance.get(`/transactions/student/${userData.id}`),
         axiosInstance.get(`/menus/day/${dayNumber}`),
-        axiosInstance.get(`/transactions/student/${userData.id}`)
+        axiosInstance.get(`/transactions/student/${userData.id}`),
+        axiosInstance.get(`/api/daily-menus/latestTransaction/${user.id}`)
       ]);
 
       // Process meal plan data
@@ -364,7 +365,7 @@ const StudentDashboard = () => {
                 </List>
               ) : (
                 <Typography variant="body1" align="center" sx={{ py: 3 }}>
-                  No recent transactions
+                  { latestTransactionData.data }
                 </Typography>
               )}
             </CardContent>
