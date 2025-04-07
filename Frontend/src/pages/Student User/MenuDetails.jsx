@@ -3,7 +3,6 @@ import {
   Paper,
   Typography,
   Box,
-  Button,
   Table,
   TableBody,
   TableCell,
@@ -11,9 +10,8 @@ import {
   TableHead,
   TableRow
 } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-const MenuDisplay = ({ menus, showWeeklyMenu, setShowWeeklyMenu, currentDayMenu }) => {
+const MenuDisplay = ({ menus }) => {
   const getDayName = (day) => {
     const days = [
       "Sunday",
@@ -27,6 +25,9 @@ const MenuDisplay = ({ menus, showWeeklyMenu, setShowWeeklyMenu, currentDayMenu 
     ];
     return days[day - 1] || "Invalid day";
   };
+
+  // Sort menus array by day number
+  const sortedMenus = [...menus].sort((a, b) => a.day - b.day);
 
   return (
     <Paper
@@ -56,27 +57,8 @@ const MenuDisplay = ({ menus, showWeeklyMenu, setShowWeeklyMenu, currentDayMenu 
             fontWeight: 600,
           }}
         >
-          {showWeeklyMenu ? "Weekly Menu" : "Today's Menu"}
+          Weekly Menu
         </Typography>
-        
-        <Button
-          variant="outlined"
-          size="small"
-          endIcon={<ArrowForwardIcon />}
-          onClick={() => setShowWeeklyMenu(!showWeeklyMenu)}
-          sx={{ 
-            color: "#f57c00",
-            borderColor: "#f57c00",
-            transition: "all 0.3s ease",
-            "&:hover": {
-              borderColor: "#e65100",
-              backgroundColor: "rgba(245, 124, 0, 0.04)",
-              transform: "translateX(3px)",
-            }
-          }}
-        >
-          {showWeeklyMenu ? "View Today's Menu" : "View Weekly Menu"}
-        </Button>
       </Box>
       
       <TableContainer 
@@ -108,43 +90,27 @@ const MenuDisplay = ({ menus, showWeeklyMenu, setShowWeeklyMenu, currentDayMenu 
             </TableRow>
           </TableHead>
           <TableBody>
-            {showWeeklyMenu ? (
-              menus.length > 0 ? (
-                menus.map((menu) => (
-                  <TableRow 
-                    key={menu.day}
-                    sx={{ 
-                      "&:nth-of-type(odd)": { backgroundColor: "rgba(255, 248, 225, 0.5)" },
-                      transition: "all 0.2s",
-                      "&:hover": { backgroundColor: "rgba(255, 224, 178, 0.5)" }
-                    }}
-                  >
-                    <TableCell><strong>{getDayName(menu.day)}</strong></TableCell>
-                    <TableCell>{menu.breakfast}</TableCell>
-                    <TableCell>{menu.lunch}</TableCell>
-                    <TableCell>{menu.snacks}</TableCell>
-                    <TableCell>{menu.dinner}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                    <Typography color="text.secondary">No menu data available</Typography>
-                  </TableCell>
+            {sortedMenus.length > 0 ? (
+              sortedMenus.map((menu) => (
+                <TableRow 
+                  key={menu.day}
+                  sx={{ 
+                    "&:nth-of-type(odd)": { backgroundColor: "rgba(255, 248, 225, 0.5)" },
+                    transition: "all 0.2s",
+                    "&:hover": { backgroundColor: "rgba(255, 224, 178, 0.5)" }
+                  }}
+                >
+                  <TableCell><strong>{getDayName(menu.day)}</strong></TableCell>
+                  <TableCell>{menu.breakfast}</TableCell>
+                  <TableCell>{menu.lunch}</TableCell>
+                  <TableCell>{menu.snacks}</TableCell>
+                  <TableCell>{menu.dinner}</TableCell>
                 </TableRow>
-              )
-            ) : currentDayMenu ? (
-              <TableRow>
-                <TableCell><strong>{getDayName(currentDayMenu.day)}</strong></TableCell>
-                <TableCell>{currentDayMenu.breakfast}</TableCell>
-                <TableCell>{currentDayMenu.lunch}</TableCell>
-                <TableCell>{currentDayMenu.snacks}</TableCell>
-                <TableCell>{currentDayMenu.dinner}</TableCell>
-              </TableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                  <Typography color="text.secondary">No menu available for today</Typography>
+                  <Typography color="text.secondary">No menu data available</Typography>
                 </TableCell>
               </TableRow>
             )}

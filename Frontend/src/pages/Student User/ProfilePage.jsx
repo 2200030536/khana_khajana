@@ -91,6 +91,13 @@ const Profile = () => {
         return <MealsPlans />;
       case 'profile': // Changed to lowercase to match key in menuItems
         return <ProfileDetails user={user} />;
+      case 'weeklyMenu':
+        return <MenuDisplay 
+              showWeeklyMenu={showWeeklyMenu}
+              setShowWeeklyMenu={setShowWeeklyMenu}
+              menus={menus}
+              currentDayMenu={currentDayMenu}
+            />
       default:
         return (
           <>

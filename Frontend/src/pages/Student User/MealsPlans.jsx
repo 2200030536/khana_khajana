@@ -47,37 +47,7 @@ const MealPlans = () => {
   const navigate = useNavigate();
 
   // State for pricing data
-  const [prices, setPrices] = useState({
-    breakfast: 50,
-    lunch: {
-      vegetarian: 80,
-      nonVegetarian: 120
-    },
-    dinner: {
-      vegetarian: 80,
-      nonVegetarian: 120
-    },
-    snacks: 30,
-    plans: {
-      daily: {
-        vegetarian: 200,
-        nonVegetarian: 280
-      },
-      weekly: {
-        vegetarian: 1200,
-        nonVegetarian: 1800
-      },
-      monthly: {
-        vegetarian: 4500,
-        nonVegetarian: 6000
-      },
-      semester: {
-        vegetarian: 25000,
-        nonVegetarian: 32000
-      }
-    }
-  });
-
+  const [prices, setPrices] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [error, setError] = useState('');
@@ -146,17 +116,53 @@ const MealPlans = () => {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
+        setLoading(true);
+        // Update the endpoint to the correct one for your database
         const response = await axiosInstance.get('/api/prices/current');
 
-        // If API call succeeds, use the response data
         if (response && response.data) {
+          console.log("Fetched price data:", response.data);
           setPrices(response.data);
+        } else {
+          throw new Error('No pricing data received');
         }
       } catch (err) {
         console.error('Error fetching prices:', err);
-        // Keep using default prices if API fails
-        setError('Failed to load meal plan prices. Using default pricing.');
+        setError('Failed to load meal plan prices. Please try again later.');
+        // Set a fallback pricing structure in case the API call fails
+        setPrices({
+          breakfast: 55,
+          lunch: {
+            vegetarian: 70,
+            nonVegetarian: 109.98
+          },
+          dinner: {
+            vegetarian: 70,
+            nonVegetarian: 100
+          },
+          snacks: 25,
+          plans: {
+            daily: {
+              vegetarian: 180,
+              nonVegetarian: 220
+            },
+            weekly: {
+              vegetarian: 1200,
+              nonVegetarian: 1500
+            },
+            monthly: {
+              vegetarian: 4000,
+              nonVegetarian: 4499.99
+            },
+            semester: {
+              vegetarian: 23000,
+              nonVegetarian: 25000
+            }
+          }
+        });
         setTimeout(() => setError(''), 5000);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -231,6 +237,13 @@ const MealPlans = () => {
       return;
     }
 
+    // Check if prices are available
+    if (!prices || !prices.plans) {
+      setError('Unable to get pricing information. Please try again later.');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
     setSelectedPlan({
       type: planType,
       price: isVegetarian ?
@@ -242,21 +255,51 @@ const MealPlans = () => {
 
   // Calculate adjusted price based on selections
   const calculateAdjustedPrice = (basePlanPrice) => {
-    if (!selectedPlan) return basePlanPrice;
+    if (!selectedPlan || !prices) return basePlanPrice;
 
     let totalPrice = basePlanPrice;
+    const breakfastPrice = prices.breakfast || 0;
+    const lunchPrice = isVegetarian ? 
+      (prices.lunch ? prices.lunch.vegetarian : 0) : 
+      (prices.lunch ? prices.lunch.nonVegetarian : 0);
+    const dinnerPrice = isVegetarian ? 
+      (prices.dinner ? prices.dinner.vegetarian : 0) : 
+      (prices.dinner ? prices.dinner.nonVegetarian : 0);
 
-    // Simple calculation - if a meal is deselected, reduce by percentage
-    if (!mealSelections.breakfast) {
-      totalPrice = totalPrice * 0.85; // Reduce by 15%
-    }
-
-    if (!mealSelections.lunch) {
-      totalPrice = totalPrice * 0.75; // Reduce by 25%
-    }
-
-    if (!mealSelections.dinner) {
-      totalPrice = totalPrice * 0.75; // Reduce by 25%
+    // Calculate total meal cost per day
+    const totalMealPrice = breakfastPrice + lunchPrice + dinnerPrice;
+    
+    // If no totalMealPrice (should not happen), use simple percentage calculation
+    if (totalMealPrice === 0) {
+      if (!mealSelections.breakfast) {
+        totalPrice = totalPrice * 0.85; // Reduce by 15%
+      }
+      if (!mealSelections.lunch) {
+        totalPrice = totalPrice * 0.75; // Reduce by 25%
+      }
+      if (!mealSelections.dinner) {
+        totalPrice = totalPrice * 0.75; // Reduce by 25%
+      }
+    } else {
+      // Calculate the actual meal proportion based on real pricing
+      const days = getNumberOfDays();
+      let deduction = 0;
+      
+      if (!mealSelections.breakfast) {
+        deduction += breakfastPrice * days;
+      }
+      
+      if (!mealSelections.lunch) {
+        deduction += lunchPrice * days;
+      }
+      
+      if (!mealSelections.dinner) {
+        deduction += dinnerPrice * days;
+      }
+      
+      // Apply the deduction, but ensure we don't go below a minimum threshold
+      // (assuming 20% discount is the max possible discount for meal selection)
+      totalPrice = Math.max(totalPrice - deduction, totalPrice * 0.8);
     }
 
     return Math.round(totalPrice);
@@ -266,11 +309,11 @@ const MealPlans = () => {
   const handleSubmitPurchase = async () => {
     try {
       setError('');
-      setLoading(true);
+      setLoadingPlan(true);
 
       if (!isLoggedIn || !user) {
         setError('You must be logged in to purchase a meal plan.');
-        setLoading(false);
+        setLoadingPlan(false);
         setTimeout(() => {
           setError('');
           setCheckoutOpen(false);
@@ -282,7 +325,7 @@ const MealPlans = () => {
       // Check that at least one meal is selected
       if (!mealSelections.breakfast && !mealSelections.lunch && !mealSelections.dinner) {
         setError('Please select at least one meal type.');
-        setLoading(false);
+        setLoadingPlan(false);
         return;
       }
 
@@ -325,13 +368,17 @@ const MealPlans = () => {
         setError('Failed to process your transaction. Please try again.');
       }
     } finally {
-      setLoading(false);
+      setLoadingPlan(false);
     }
   };
 
   // Render price card for one plan type
   const renderPlanCard = (planType, icon, title, description) => {
-    if (!prices) return null;
+    if (!prices || !prices.plans) return (
+      <Card elevation={3} sx={{ height: '100%', p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress size={40} sx={{ color: '#f57c00' }} />
+      </Card>
+    );
 
     const price = isVegetarian ?
       prices.plans[planType].vegetarian :
@@ -577,7 +624,7 @@ const MealPlans = () => {
         </Box>
 
         {/* Loading state */}
-        {loading ? (
+        {loading && !prices ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
             <CircularProgress size={60} sx={{ color: '#f57c00' }} />
           </Box>
@@ -634,7 +681,6 @@ const MealPlans = () => {
           </Grid>
         )}
 
-        {/* Rest of the component remains unchanged */}
         {/* Benefits section */}
         <Box mt={8}>
           <Divider sx={{ mb: 4 }} />
@@ -880,14 +926,14 @@ const MealPlans = () => {
               onClick={handleSubmitPurchase}
               variant="contained"
               color="primary"
-              disabled={loading}
+              disabled={loadingPlan}
               sx={{
                 bgcolor: '#f57c00',
                 '&:hover': { bgcolor: '#e65100' },
               }}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CartIcon />}
+              startIcon={loadingPlan ? <CircularProgress size={20} color="inherit" /> : <CartIcon />}
             >
-              {loading ? 'Processing...' : 'Complete Purchase'}
+              {loadingPlan ? 'Processing...' : 'Complete Purchase'}
             </Button>
           </DialogActions>
         </Dialog>
