@@ -105,6 +105,6 @@ router.delete('/day/:day', async (req, res) => {
   }
 });
 
-router.get('/latestTransaction', studentTransaction);
+router.get('/latestTransaction/:id', studentTransaction);
 
 export default router;

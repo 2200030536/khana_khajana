@@ -31,12 +31,14 @@ const MessDashboard = () => {
     setError('');
     
     try {
+      const dayNumber = new Date().getDay() + 1;
+
       // Fetch all required data in parallel
       const [studentsResponse, menusResponse, transactionsResponse, todayMenuResponse] = await Promise.all([
         axiosInstance.get('/students'),
         axiosInstance.get('/menus'),
         axiosInstance.get('/transactions'),
-        axiosInstance.get('/menus/')
+        axiosInstance.get(`/menus/day/${dayNumber}`),
       ]);
       
       // Extract the count of items
@@ -59,12 +61,16 @@ const MessDashboard = () => {
       });
       
       // Update today's menu
-      setTodayMenu({
-        breakfast: todayMenuData.breakfast || [],
-        lunch: todayMenuData.lunch || [],
-        snacks: todayMenuData.snacks || [],
-        dinner: todayMenuData.dinner || []
-      });
+      const menuData = todayMenuResponse.data;
+      // console.log(menuData);
+      if (menuData) {
+        setTodayMenu({
+          breakfast: menuData.breakfast ? menuData.breakfast.split(',').map(item => item.trim()) : [],
+          lunch: menuData.lunch ? menuData.lunch.split(',').map(item => item.trim()) : [],
+          snacks: menuData.snacks ? menuData.snacks.split(',').map(item => item.trim()) : [],
+          dinner: menuData.dinner ? menuData.dinner.split(',').map(item => item.trim()) : []
+        });
+      }
       
       // Fetch recent activities
       // You might need a dedicated endpoint for this, but for now we'll use recent transactions
