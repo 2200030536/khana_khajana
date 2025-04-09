@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-//   line 77 (latestTransactionData) se data lena hai, line 368 mai data daalna hai
+
 import {
   Box,
   Paper,
@@ -51,6 +51,7 @@ const StudentDashboard = () => {
   });
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [latestTransaction, setLatestTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -70,41 +71,30 @@ const StudentDashboard = () => {
       if (!userData || !userData.id) {
         throw new Error("User profile information is incomplete");
       }
-      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      
       const dayNumber = new Date().getDay() + 1;
 
-      // Fetch all required data in parallel
-      const [mealPlanResponse, menuResponse, transactionsResponse, latestTransactionData] = await Promise.all([
-        axiosInstance.get(`/transactions/student/${userData.id}`),
-        axiosInstance.get(`/menus/day/${dayNumber}`),
-        axiosInstance.get(`/transactions/student/${userData.id}`),
-        axiosInstance.get(`/api/daily-menus/latestTransaction/${user.id}`)
-      ]);
-
-      // Process meal plan data
-      setMealPlan(mealPlanResponse.data);
-      // console.log(mealPlanResponse.data);
-
-      // Process today's menu
-      const menuData = menuResponse.data;
-      // console.log(menuData);
-      if (menuData) {
-        setTodayMenu({
-          breakfast: menuData.breakfast ? menuData.breakfast.split(',').map(item => item.trim()) : [],
-          lunch: menuData.lunch ? menuData.lunch.split(',').map(item => item.trim()) : [],
-          snacks: menuData.snacks ? menuData.snacks.split(',').map(item => item.trim()) : [],
-          dinner: menuData.dinner ? menuData.dinner.split(',').map(item => item.trim()) : []
-        });
+      // Split the API calls to handle errors independently
+      try {
+        // Menu data should be fetched regardless of transaction status
+        const menuResponse = await axiosInstance.get(`/menus/day/${dayNumber}`);
+        const menuData = menuResponse.data;
+        
+        if (menuData) {
+          setTodayMenu({
+            breakfast: menuData.breakfast ? menuData.breakfast.split(',').map(item => item.trim()) : [],
+            lunch: menuData.lunch ? menuData.lunch.split(',').map(item => item.trim()) : [],
+            snacks: menuData.snacks ? menuData.snacks.split(',').map(item => item.trim()) : [],
+            dinner: menuData.dinner ? menuData.dinner.split(',').map(item => item.trim()) : []
+          });
+        }
+      } catch (menuError) {
+        console.error('Error fetching menu data:', menuError);
+        // Don't fail the whole dashboard if menu data fails
       }
-      // Process transactions - make sure it's an array before calling slice
-      const transactions = Array.isArray(transactionsResponse.data)
-        ? transactionsResponse.data
-        : transactionsResponse.data?.transactions || [];
 
-      setRecentTransactions(transactions.slice(0, 5));
-
-      // Create some upcoming events based on meal times
-      const currentDate = new Date();
+      // Create schedule regardless of transaction status
+      const now = new Date();
       const upcomingMeals = [
         {
           title: 'Breakfast',
@@ -132,20 +122,42 @@ const StudentDashboard = () => {
         }
       ];
 
-
       // Filter to only show upcoming meals
-      const now = new Date();
       const upcomingMealsFiltered = upcomingMeals.filter(meal => meal.time > now);
       setUpcomingEvents(upcomingMealsFiltered);
 
+      // Now fetch transaction data separately
+      try {
+        const [mealPlanResponse, transactionsResponse, latestTransactionResponse] = await Promise.all([
+          axiosInstance.get(`/transactions/student/${userData.id}`),
+          axiosInstance.get(`/transactions/student/${userData.id}`),
+          axiosInstance.get(`/api/daily-menus/latestTransaction/${userData.id}`)
+        ]);
+
+        // Process meal plan data
+        setMealPlan(mealPlanResponse.data);
+
+        // Process transactions
+        const transactions = Array.isArray(transactionsResponse.data)
+          ? transactionsResponse.data
+          : transactionsResponse.data?.transactions || [];
+        
+        setRecentTransactions(transactions.slice(0, 5));
+
+        // Set latest transaction
+        setLatestTransaction(latestTransactionResponse.data);
+      } catch (transactionError) {
+        console.error('Error fetching transaction data:', transactionError);
+        // Don't set error state, we still want to display menu and schedule
+      }
+
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data. ' + (error.response?.data?.error || error.message));
+      console.error('Error fetching user profile:', error);
+      setError('Failed to load user profile. Please try again later.');
       setLoading(false);
     }
   };
-
 
   const formatMenuItems = (items) => {
     if (!items || !items.length) return "Not available";
@@ -187,6 +199,34 @@ const StudentDashboard = () => {
     }
 
     return { status: 'inactive', text: 'Check Schedule' };
+  };
+
+  // Helper function to render meal plan details
+  const renderLatestTransaction = () => {
+    if (!latestTransaction || !latestTransaction.data) return 'No recent transactions';
+    
+    const txData = latestTransaction.data;
+    
+    return (
+      <div>
+        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          Transaction ID: {txData.transactionId?.substring(0, 8)}...
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          Status: {txData.paymentStatus}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          Meals: {[
+            txData.breakfast ? 'Breakfast' : '', 
+            txData.lunch ? 'Lunch' : '', 
+            txData.dinner ? 'Dinner' : ''
+          ].filter(Boolean).join(', ')}
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          Valid: {formatDate(txData.startDate)} - {formatDate(txData.endDate)}
+        </Typography>
+      </div>
+    );
   };
 
   if (loading) {
@@ -364,9 +404,9 @@ const StudentDashboard = () => {
                   ))}
                 </List>
               ) : (
-                <Typography variant="body1" align="center" sx={{ py: 3 }}>
-                  { latestTransactionData.data }
-                </Typography>
+                <Box sx={{ py: 1, px: 1 }}>
+                  {renderLatestTransaction()}
+                </Box>
               )}
             </CardContent>
           </Card>
@@ -523,7 +563,7 @@ const StudentDashboard = () => {
       </Paper>
 
       {/* Quick Actions */}
-      {/* <Paper 
+      <Paper 
         elevation={3} 
         sx={{ 
           p: 3,
@@ -601,7 +641,7 @@ const StudentDashboard = () => {
             </Button>
           </Grid>
         </Grid>
-      </Paper> */}
+      </Paper>
     </Box>
   );
 };
