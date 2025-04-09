@@ -13,7 +13,7 @@ const studentTransactionSchema = new mongoose.Schema({
   },
   planType: {
     type: String,
-    enum: ['daily', 'weekly', 'monthly'],
+    enum: ['daily', 'weekly', 'monthly', 'semester'], // Added 'semester' to the enum
     required: true
   },
   breakfast: {

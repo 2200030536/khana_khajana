@@ -7,13 +7,58 @@ const router = express.Router();
 router.post('/', async (req, res) => {
   try {
     console.log('Request Body:', req.body);
-    const { studentId, breakfast, lunch, dinner, startDate, endDate } = req.body;
-    const newTransaction = new StudentTransaction({ studentId, breakfast, lunch, dinner, startDate, endDate });
+    
+    // Extract all fields from request body
+    const { 
+      studentId, 
+      planType, 
+      breakfast, 
+      lunch, 
+      dinner, 
+      startDate, 
+      endDate,
+      amount,
+      paymentStatus,
+      paymentMethod,
+      status
+    } = req.body;
+    
+    // Create new transaction with all required fields explicitly
+    const newTransaction = new StudentTransaction({
+      studentId,
+      planType,
+      breakfast,
+      lunch,
+      dinner,
+      startDate,
+      endDate,
+      amount,
+      paymentStatus,
+      paymentMethod,
+      status
+    });
+    
+    // Save with validation
     await newTransaction.save();
+    
     res.status(201).json(newTransaction);
   } catch (error) {
-    console.error('Error:', error.message);
-    res.status(400).json({ error: error.message });
+    console.error('Error creating transaction:', error.message);
+    
+    // Provide more detailed error information
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors).map(field => ({
+        field,
+        message: error.errors[field].message
+      }));
+      
+      res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    } else {
+      res.status(400).json({ error: error.message });
+    }
   }
 });
 

@@ -300,7 +300,7 @@ const StudentDashboard = () => {
                     sx={{
                       bgcolor: 'rgba(255, 255, 255, 0.2)',
                       '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
-                    }}
+                    }} onClick={() => navigate('/meals-plans')}
                   >
                     Browse Plans
                   </Button>

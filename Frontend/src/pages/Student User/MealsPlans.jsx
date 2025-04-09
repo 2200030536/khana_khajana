@@ -59,6 +59,7 @@ const MealPlans = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [isVegetarian, setIsVegetarian] = useState(true);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
 
   // Selected plan state
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -305,15 +306,13 @@ const MealPlans = () => {
     return Math.round(totalPrice);
   };
 
-  // Submit plan purchase
+  // Submit plan purchase - modified to show confirmation first
   const handleSubmitPurchase = async () => {
     try {
       setError('');
-      setLoadingPlan(true);
-
+      
       if (!isLoggedIn || !user) {
         setError('You must be logged in to purchase a meal plan.');
-        setLoadingPlan(false);
         setTimeout(() => {
           setError('');
           setCheckoutOpen(false);
@@ -325,10 +324,23 @@ const MealPlans = () => {
       // Check that at least one meal is selected
       if (!mealSelections.breakfast && !mealSelections.lunch && !mealSelections.dinner) {
         setError('Please select at least one meal type.');
-        setLoadingPlan(false);
         return;
       }
+      
+      // Show payment confirmation dialog instead of processing immediately
+      setConfirmationOpen(true);
+      
+    } catch (err) {
+      console.error('Error in purchase flow:', err);
+      setError('An unexpected error occurred. Please try again.');
+    }
+  };
 
+  // New function to handle the actual transaction processing
+  const processTransaction = async (paymentCompleted) => {
+    try {
+      setLoadingPlan(true);
+      
       const transactionData = {
         studentId: parseInt(user.id),
         planType: selectedPlan.type,
@@ -338,9 +350,9 @@ const MealPlans = () => {
         startDate: startDate.toISOString(),
         endDate: getEndDate().toISOString(),
         amount: calculateAdjustedPrice(selectedPlan.price),
-        paymentStatus: 'pending',
+        paymentStatus: paymentCompleted ? 'completed' : 'failed',
         paymentMethod: paymentMethod,
-        status: 'active'
+        status: paymentCompleted ? 'active' : 'canceled'
       };
 
       console.log('Sending transaction data:', transactionData);
@@ -352,12 +364,20 @@ const MealPlans = () => {
 
       console.log('Transaction created:', response.data);
 
-      // Update the active meal plan
-      setActiveMealPlan(response.data);
-
-      // Show success message and close dialog
-      alert('Thank you for your purchase! Your meal plan will be activated soon.');
+      // Update the active meal plan only if payment was successful
+      if (paymentCompleted) {
+        setActiveMealPlan(response.data);
+        // Show success message
+        alert('Thank you for your purchase! Your meal plan has been activated.');
+      } else {
+        // Show failure message
+        alert('Your transaction has been marked as failed. You can try again when ready.');
+      }
+      
+      // Close both dialogs
+      setConfirmationOpen(false);
       setCheckoutOpen(false);
+      
     } catch (err) {
       console.error('Error submitting transaction:', err);
 
@@ -730,6 +750,46 @@ const MealPlans = () => {
             </Grid>
           </Grid>
         </Box>
+
+        {/* Payment Confirmation Dialog */}
+        <Dialog
+          open={confirmationOpen}
+          onClose={() => setConfirmationOpen(false)}
+        >
+          <DialogTitle>
+            <Typography variant="h6" fontWeight="bold">
+              Payment Confirmation
+            </Typography>
+          </DialogTitle>
+          
+          <DialogContent>
+            <Typography variant="body1" mb={2}>
+              Have you completed the payment of ₹{calculateAdjustedPrice(selectedPlan?.price || 0).toLocaleString()} through {paymentMethod}?
+            </Typography>
+            
+            <Typography variant="body2" color="text.secondary">
+              Please confirm your payment status to proceed.
+            </Typography>
+          </DialogContent>
+          
+          <DialogActions sx={{ p: 2 }}>
+            <Button 
+              variant="outlined" 
+              color="error"
+              onClick={() => processTransaction(false)}
+            >
+              No, Payment Failed
+            </Button>
+            
+            <Button 
+              variant="contained" 
+              color="success"
+              onClick={() => processTransaction(true)}
+            >
+              Yes, Payment Completed
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Checkout Dialog */}
         <Dialog
