@@ -62,6 +62,78 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Add new route for extending an existing plan
+router.post('/extend', async (req, res) => {
+  try {
+    console.log('Extension Request Body:', req.body);
+    
+    // Extract required fields for extension
+    const { 
+      studentId, 
+      planType, 
+      breakfast, 
+      lunch, 
+      dinner, 
+      currentEndDate,
+      newEndDate,
+      amount,
+      paymentStatus,
+      paymentMethod
+    } = req.body;
+    
+    // Find the most recent active transaction for this student
+    const currentTransaction = await StudentTransaction.findOne({ 
+      studentId, 
+      status: 'active',
+      endDate: currentEndDate
+    });
+    
+    if (!currentTransaction) {
+      return res.status(404).json({ 
+        error: 'No active plan found for extension with the specified end date' 
+      });
+    }
+    
+    // Create a new transaction record for the extension
+    const extensionTransaction = new StudentTransaction({
+      studentId,
+      planType,
+      breakfast: breakfast !== undefined ? breakfast : currentTransaction.breakfast,
+      lunch: lunch !== undefined ? lunch : currentTransaction.lunch,
+      dinner: dinner !== undefined ? dinner : currentTransaction.dinner,
+      startDate: new Date(currentEndDate), // Start from the end of current plan
+      endDate: newEndDate,
+      amount,
+      paymentStatus,
+      paymentMethod,
+      status: paymentStatus === 'completed' ? 'active' : 'pending',
+      isExtension: true, // Mark as an extension transaction
+      previousTransactionId: currentTransaction._id // Reference to original plan
+    });
+    
+    // Save the extension
+    await extensionTransaction.save();
+    
+    res.status(201).json(extensionTransaction);
+  } catch (error) {
+    console.error('Error creating plan extension:', error.message);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors).map(field => ({
+        field,
+        message: error.errors[field].message
+      }));
+      
+      res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationErrors 
+      });
+    } else {
+      res.status(400).json({ error: error.message });
+    }
+  }
+});
+
 // Get all StudentTransactions
 router.get('/', async (req, res) => {
   try {
@@ -85,6 +157,27 @@ router.get('/student/:studentId', async (req, res) => {
     res.status(200).json(transaction);
   } catch (error) {
     console.error('Error fetching StudentTransaction:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get all active transactions for a student
+router.get('/student/:studentId/active', async (req, res) => {
+  try {
+    const studentId = req.params.studentId;
+    const activeTransaction = await StudentTransaction.findOne({ 
+      studentId, 
+      status: 'active',
+      endDate: { $gte: new Date() } // Only return plans that haven't expired yet
+    }).sort({ endDate: -1 }); // Get the one with the latest end date
+
+    if (!activeTransaction) {
+      return res.status(404).json({ error: 'No active plan found for this student' });
+    }
+
+    res.status(200).json(activeTransaction);
+  } catch (error) {
+    console.error('Error fetching active StudentTransaction:', error.message);
     res.status(400).json({ error: error.message });
   }
 });
