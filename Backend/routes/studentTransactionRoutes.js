@@ -148,7 +148,10 @@ router.get('/', async (req, res) => {
 router.get('/student/:studentId', async (req, res) => {
   try {
     const studentId = req.params.studentId;
-    const transaction = await StudentTransaction.findOne({ studentId });
+
+    const transaction = await StudentTransaction
+      .findOne({ studentId })
+      .sort({ createdAt: -1 }); // Sort by createdAt descending (latest first)
 
     if (!transaction) {
       return res.status(404).json({ error: 'StudentTransaction not found for the given studentId' });
@@ -160,6 +163,7 @@ router.get('/student/:studentId', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
 
 // Get all active transactions for a student
 router.get('/student/:studentId/active', async (req, res) => {
