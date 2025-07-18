@@ -3,8 +3,8 @@
   "builds": [
     {
       "src": "app.js",
-      "use": "@vercel/node"
-      "cofig":{"includeFiles":["dist/**"]}
+      "use": "@vercel/node",
+      "config":{"includeFiles":["dist/**"]}
     }
   ],
   "routes": [
