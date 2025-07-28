@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3001', // Adjust the base URL as needed
+  baseURL: 'https://khana-khajana-y852.vercel.app/', // for local
   withCredentials: true // Allow credentials (cookies) to be sent
 });
 
