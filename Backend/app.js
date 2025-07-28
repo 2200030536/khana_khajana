@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import session from 'express-session';
 import connectDB from './server/connect.mjs';
+
 import messUserRoutes from './routes/messUserRoutes.js';
 import studentUserRoutes from './routes/studentUserRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
@@ -11,40 +12,34 @@ import studentTransactionRoutes from './routes/studentTransactionRoutes.js';
 import dailyMenuRoutes from './routes/dailyMenuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import priceRoutes from './routes/priceRoutes.js';
-import contactRoutes from './routes/contactRoutes.js'; // Add this line
-
-
+import contactRoutes from './routes/contactRoutes.js';
 
 const app = express();
-const port = 3001;
 
 // Connect to MongoDB
 connectDB();
 
-// Enable CORS
+// ✅ Enable CORS for both local and deployed frontend
 app.use(cors({
-  // origin: 'http://localhost:3000', // Adjust the origin as needed
-  origin: 'https://khana-khajana-psi.vercel.app/', // Adjust the origin as needed
-  credentials: true // Allow credentials (cookies) to be sent
+  origin: ['http://localhost:3000', 'https://khana-khajana-psi.vercel.app'],
+  credentials: true
 }));
 
-// Configure session middleware
+// Session setup
 app.use(session({
-  secret: 'krishna', // Replace with your own secret key
+  secret: 'krishna',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // Set to true if using HTTPS
+  cookie: { secure: false }
 }));
 
-// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Sample route
+// Routes
 app.get('/', (req, res) => {
   res.json('Hello World!');
 });
 
-// Use routes
 app.use('/messUsers', messUserRoutes);
 app.use('/students', studentUserRoutes);
 app.use('/admins', adminRoutes);
@@ -53,14 +48,12 @@ app.use('/menus', dailyMenuRoutes);
 app.use('/auth', authRoutes);
 app.use('/api/prices', priceRoutes);
 app.use('/api/daily-menus', dailyMenuRoutes);
-app.use('/api/contacts', contactRoutes); // Add this line
+app.use('/api/contacts', contactRoutes);
 
-// Serve the HTML file
+// Serve static files if needed (optional in serverless)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+// ✅ Important: Do NOT use app.listen() — instead export the app
+export default app;
