@@ -23,8 +23,8 @@ connectDB();
 
 // Enable CORS
 app.use(cors({
-  origin: 'http://localhost:3000', // Adjust the origin as needed
-  credentials: true // Allow credentials (cookies) to be sent
+  origin: ['http://localhost:3000', 'https://khana-khajana-psi.vercel.app'],
+  credentials: true
 }));
 
 // Configure session middleware
