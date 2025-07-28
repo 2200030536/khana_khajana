@@ -30,7 +30,7 @@ app.use(session({
   secret: 'krishna',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }
+  cookie: { secure: true }
 }));
 
 app.use(express.json());
