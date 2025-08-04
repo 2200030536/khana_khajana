@@ -18,11 +18,16 @@ const app = express();
 
 // Connect to MongoDB
 connectDB();
+const allowedOrigins = [
+  'https://khana-khajana-psi.vercel.app', // your frontend domain
+];
 
 // ✅ Enable CORS for both local and deployed frontend
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://khana-khajana-psi.vercel.app'],
-  credentials: true
+  // origin: ['http://localhost:3000', 'https://khana-khajana-psi.vercel.app','https://khana-khajana-psi.vercel.app'],
+  // credentials: true
+   origin: allowedOrigins,
+  credentials: true,
 }));
 
 // Session setup
