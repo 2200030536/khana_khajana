@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
         email: user.email,
         userType: userType
       }
-    }.cookie("accessToken", "ok");
+    }).cookie("accessToken", "ok");
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
