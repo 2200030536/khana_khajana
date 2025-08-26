@@ -32,11 +32,12 @@ app.use(cors({
 
 // Session setup
 app.use(session({
-  secret: 'krishna',
+  secret: 'krishn,
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
+  saveUninitialized: false,
+  cookie: { maxAge: 1000 * 60 * 30 } // 30 minutes
 }));
+
 
 app.use(express.json());
 
