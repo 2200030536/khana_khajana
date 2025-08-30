@@ -14,12 +14,6 @@ router.use(session({
   cookie: { secure: false } // Set to true if using HTTPS
 }));
 
-const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-};
-
 // Login route for all user types
 router.post('/login', async (req, res) => {
   try {
@@ -65,7 +59,7 @@ router.post('/login', async (req, res) => {
         email: user.email,
         userType: userType
       }
-    }).cookie("accessToken", "ok", options);
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
