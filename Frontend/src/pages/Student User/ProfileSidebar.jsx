@@ -1,6 +1,6 @@
 import React from "react";
-import axiosInstance from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   Box, 
   Typography, 
@@ -34,14 +34,14 @@ const pulse = keyframes`
 
 const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveItem, fadeIn }) => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
+    
     const handleLogout = async () => {
       try {
-        await axiosInstance.post("/auth/logout");
-        alert("Logout successful");
+        await logout();
         navigate("/login");
       } catch (error) {
         console.error("Error during logout:", error);
-        alert("Failed to logout. Please try again.");
       }
     };
   

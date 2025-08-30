@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import axiosInstance from '../../axiosConfig';
 import {
   Container,
@@ -76,6 +77,7 @@ const MenuManager = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get user from AuthContext
   
   // Function to get current date in the required format
   const getCurrentDate = () => {
@@ -96,8 +98,7 @@ const MenuManager = () => {
   ];
   const CURRENT_DATE = getCurrentDate();
 
-  // State variables
-  const [user, setUser] = useState(null);
+  // State variables (removed user state since it comes from AuthContext)
   const [error, setError] = useState("");
   const [menus, setMenus] = useState([]);
   const [activeTab, setActiveTab] = useState('view');
@@ -118,12 +119,7 @@ const MenuManager = () => {
     lastModifiedAt: CURRENT_DATE,
   });
 
-  // First load user data
-  useEffect(() => {
-    fetchUserProfile();
-  }, []);
-  
-  // After user is loaded, update form data and fetch menus
+  // Initialize form data when user is available
   useEffect(() => {
     if (user?.id) {
       setFormData(prev => ({
@@ -133,37 +129,6 @@ const MenuManager = () => {
       fetchMenus();
     }
   }, [user]);
-
-  const fetchUserProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      // Make sure this matches your backend route exactly
-      const response = await axiosInstance.get("/auth/profile");
-      
-      console.log("Profile data:", response.data); // Debug
-      
-      if (response.data && response.data.user) {
-        setUser(response.data.user);
-      } else {
-        setError("Invalid response from server");
-        showNotification("Invalid response from server", "error");
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      if (error.response?.status === 401) {
-        // Handle unauthorized access - redirect to login
-        setError("Session expired. Please login again.");
-        showNotification("Session expired. Please login again.", "error");
-        setTimeout(() => navigate("/login"), 2000);
-      } else {
-        setError("Failed to fetch profile. " + (error.response?.data?.error || "Please try again."));
-        showNotification("Failed to fetch profile", "error");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const getDayName = (dayValue) => {
     const day = DAYS_OF_WEEK.find(day => day.value === String(dayValue));

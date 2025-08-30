@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   AppBar,
   Toolbar,
@@ -18,11 +19,11 @@ import {
   Settings as SettingsIcon,
   Logout as LogoutIcon,
 } from "@mui/icons-material";
-import axiosInstance from "../../axiosConfig";
 
 const ProfileNavbar = ({ user }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const open = Boolean(anchorEl);
 
   const handleMenu = (event) => {
@@ -35,13 +36,12 @@ const ProfileNavbar = ({ user }) => {
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
-      alert("Logout successful");
+      await logout();
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
-      alert("Failed to logout. Please try again.");
     }
+    handleClose();
   };
 
   // Generate initials for avatar

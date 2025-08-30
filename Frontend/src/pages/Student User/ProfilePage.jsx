@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, useMediaQuery, useTheme, CircularProgress } from "@mui/material";
+import { useAuth } from '../../contexts/AuthContext';
 import axiosInstance from "../../axiosConfig";
 import ProfileNavbar from "./ProfileNavbar";
 import ProfileSidebar from "./ProfileSidebar";
@@ -17,8 +18,8 @@ const fadeIn = keyframes`
 
 const Profile = () => {
   const [activeComponent, setActiveComponent] = useState("dashboard");
+  const { user } = useAuth();
 
-  const [user, setUser] = useState(null);
   const [menus, setMenus] = useState([]);
   const [showWeeklyMenu, setShowWeeklyMenu] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState(null);
@@ -36,16 +37,17 @@ const Profile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch profile data
-        const profileResponse = await axiosInstance.get("/auth/profile");
-        const userData = profileResponse.data.user;
-        setUser(userData);
+        // Use user from AuthContext
+        if (!user || !user.id) {
+          setLoading(false);
+          return;
+        }
 
         // Fetch transaction status if user is a student
-        if (userData.userType === "studentUser") {
+        if (user.userType === "studentUser") {
           try {
             const transactionResponse = await axiosInstance.get(
-              `/transactions/student/${userData.id}`
+              `/transactions/student/${user.id}`
             );
             const studentTransaction = transactionResponse.data;
 

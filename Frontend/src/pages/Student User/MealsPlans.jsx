@@ -42,9 +42,11 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import axiosInstance from '../../axiosConfig';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const MealPlans = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // State for pricing data
   const [prices, setPrices] = useState(null);
@@ -52,7 +54,6 @@ const MealPlans = () => {
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [error, setError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
   const [activeMealPlan, setActiveMealPlan] = useState(null);
 
   // UI state
@@ -75,17 +76,18 @@ const MealPlans = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch profile data
-        const profileResponse = await axiosInstance.get("/auth/profile");
-        const userData = profileResponse.data.user;
-        setUser(userData);
+        // Use user from AuthContext
+        if (!user || !user.id) {
+          setIsLoggedIn(false);
+          return;
+        }
         setIsLoggedIn(true);
 
         // Fetch transaction status if user is a student
-        if (userData.userType === "studentUser") {
+        if (user.userType === "studentUser") {
           try {
             const transactionResponse = await axiosInstance.get(
-              `/transactions/student/${userData.id}`
+              `/transactions/student/${user.id}`
             );
             const studentTransaction = transactionResponse.data;
 
@@ -111,7 +113,7 @@ const MealPlans = () => {
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   // Fetch price data
   useEffect(() => {

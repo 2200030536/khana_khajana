@@ -39,7 +39,7 @@ function MessUserPage() {
           background: "linear-gradient(to right, #fbe9e7, #ffe0b2)",
         }}
       >
-        <MessUserHeader activeComponent={activeComponent} />
+        <MessUserHeader activeComponent={activeComponent} setActiveComponent={setActiveComponent} />
         
         <Box 
           sx={{

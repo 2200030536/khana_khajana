@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 import {
   Box,
@@ -42,6 +43,7 @@ const slideIn = keyframes`
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [mealPlan, setMealPlan] = useState(null);
   const [todayMenu, setTodayMenu] = useState({
     breakfast: [],
@@ -64,11 +66,8 @@ const StudentDashboard = () => {
     setError('');
 
     try {
-      // Get user profile to get the user ID
-      const profileResponse = await axiosInstance.get("/auth/profile");
-      const userData = profileResponse.data.user;
-
-      if (!userData || !userData.id) {
+      // Use user from AuthContext instead of fetching profile
+      if (!user || !user.id) {
         throw new Error("User profile information is incomplete");
       }
       
@@ -129,9 +128,9 @@ const StudentDashboard = () => {
       // Now fetch transaction data separately
       try {
         const [mealPlanResponse, transactionsResponse, latestTransactionResponse] = await Promise.all([
-          axiosInstance.get(`/transactions/student/${userData.id}`),
-          axiosInstance.get(`/transactions/student/${userData.id}`),
-          axiosInstance.get(`/api/daily-menus/latestTransaction/${userData.id}`)
+          axiosInstance.get(`/transactions/student/${user.id}`),
+          axiosInstance.get(`/transactions/student/${user.id}`),
+          axiosInstance.get(`/api/daily-menus/latestTransaction/${user.id}`)
         ]);
 
         // Process meal plan data

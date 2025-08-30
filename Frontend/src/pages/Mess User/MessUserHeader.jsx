@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   AppBar,
   Toolbar,
@@ -12,26 +14,14 @@ import {
   Tooltip,
   Fade,
 } from '@mui/material';
-import { AccountCircle, Notifications, Settings, Help } from '@mui/icons-material';
+import { AccountCircle, Notifications, Settings, Help, Logout } from '@mui/icons-material';
 import axiosInstance from '../../axiosConfig';
 
-const MessUserHeader = ({ activeComponent }) => {
-  const [user, setUser] = useState(null);
+const MessUserHeader = ({ activeComponent, setActiveComponent }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const response = await axiosInstance.get('/auth/profile');
-        setUser(response.data.user);
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      }
-    };
-    
-    fetchProfile();
-  }, []);
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -39,6 +29,16 @@ const MessUserHeader = ({ activeComponent }) => {
 
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+    handleClose();
   };
 
   // Convert component key to display name
@@ -182,6 +182,13 @@ const MessUserHeader = ({ activeComponent }) => {
           <MenuItem onClick={handleClose}>
             <Settings sx={{ mr: 1.5 }} fontSize="small" />
             Settings
+          </MenuItem>
+          
+          <Divider />
+          
+          <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+            <Logout sx={{ mr: 1.5 }} fontSize="small" />
+            Logout
           </MenuItem>
         </Menu>
       </Toolbar>

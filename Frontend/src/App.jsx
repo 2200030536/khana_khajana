@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
@@ -16,32 +19,77 @@ import MessUserPage from './pages/Mess User/MessUserPage';
 import MealPlans from './pages/Student User/MealsPlans';
 import ProfilePage from './pages/Student User/ProfilePage';
 
-
-
 const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/student-signup" element={<StudentSignup />} />
-        <Route path="/messuser-signup" element={<MessUserSignup />} />
-        <Route path="/messDashboard" element={<MessUserPage/>}></Route>
-        {/* admin dashboard */}
-        <Route path="/adminDashboard" element={<AdminUser/>}></Route>
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="/mess-user/profile" element={<MessUserProfile />} />
-        <Route path="/menu-manager" element={<MenuManager />} />
-        <Route path="/profile" element={<ProfilePage/>} />
-        <Route path="/meals-plans" element={<MealPlans />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/student-signup" element={<StudentSignup />} />
+          <Route path="/messuser-signup" element={<MessUserSignup />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/menu" element={<Menu />} />
 
+          {/* Protected Routes - Mess User */}
+          <Route 
+            path="/messDashboard" 
+            element={
+              <ProtectedRoute allowedUserTypes={['messUser']}>
+                <MessUserPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/mess-user/profile" 
+            element={
+              <ProtectedRoute allowedUserTypes={['messUser']}>
+                <MessUserProfile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/menu-manager" 
+            element={
+              <ProtectedRoute allowedUserTypes={['messUser']}>
+                <MenuManager />
+              </ProtectedRoute>
+            } 
+          />
 
+          {/* Protected Routes - Student User */}
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute allowedUserTypes={['studentUser']}>
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/meals-plans" 
+            element={
+              <ProtectedRoute allowedUserTypes={['studentUser']}>
+                <MealPlans />
+              </ProtectedRoute>
+            } 
+          />
 
-      </Routes>
-    </BrowserRouter>
+          {/* Protected Routes - Admin */}
+          <Route 
+            path="/adminDashboard" 
+            element={
+              <ProtectedRoute allowedUserTypes={['admin']}>
+                <AdminUser />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../axiosConfig";
+import { useAuth } from "../../contexts/AuthContext";
 import MessUserProfile from "./MessUserProfile";
 import MenuManager from "./MenuManager";
 import StudentDetails from "./StudentDetails";
@@ -31,15 +31,14 @@ import {
 function MessUser() {
   const [activeComponent, setActiveComponent] = useState("dashboard");
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
-      alert("Logout successful");
+      await logout();
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
-      alert("Failed to logout. Please try again.");
     }
   };
 

@@ -1,18 +1,9 @@
 import express from 'express';
-import session from 'express-session';
 import MessUser from '../schemas/MessUser.js';
 import StudentUser from '../schemas/StudentUser.js';
 import Admin from '../schemas/Admin.js';
 
 const router = express.Router();
-
-// Configure session middleware
-router.use(session({
-  secret: 'krishna', // Replace with your own secret key
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Set to true if using HTTPS
-}));
 
 const options = {
     httpOnly: true,
@@ -57,23 +48,37 @@ router.post('/login', async (req, res) => {
       userType: userType
     };
 
-    // Return user details along with userType
-    res.status(200).json({
-      message: 'Login successful',
-      user: {
-        id: user._id,
-        email: user.email,
-        userType: userType
+    // Force session save
+    req.session.save((err) => {
+      if (err) {
+        console.error('Session save error:', err);
+        return res.status(500).json({ error: 'Session save failed' });
       }
-    }).cookie("accessToken", "ok", options);
+      
+      console.log('Session saved successfully:', req.session);
+      
+      // Return user details along with userType
+      res.status(200).json({
+        message: 'Login successful',
+        user: {
+          id: user._id,
+          email: user.email,
+          userType: userType
+        }
+      })
+      // .cookie("sessionID", req.sessionID, options);
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 // Profile route
 router.get('/profile', async (req, res) => {
+  console.log('Profile route - Session ID:', req.sessionID);
+  console.log('Profile route - Session data:', req.session);
+  
   if (!req.session.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized - No session found' });
   }
 
   const { id, userType } = req.session.user;
@@ -102,6 +107,16 @@ router.post('/logout', (req, res) => {
       return res.status(500).json({ error: 'Failed to logout' });
     }
     res.status(200).json({ message: 'Logout successful' });
+  });
+});
+
+// Test route to check session
+router.get('/session-test', (req, res) => {
+  res.json({
+    sessionID: req.sessionID,
+    session: req.session,
+    hasUser: !!req.session.user,
+    cookies: req.headers.cookie
   });
 });
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../axiosConfig";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   Drawer,
   Typography,
@@ -35,15 +35,15 @@ const MessUserSidebar = ({ activeComponent, setActiveComponent, drawerWidth = 24
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { logout } = useAuth();
   
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
-      alert("Logout successful");
+      await logout();
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
-      alert("Failed to logout. Please try again.");
+      // You could show a toast notification here instead of alert
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 import axiosInstance from "../../axiosConfig";
 import {
   Box,
@@ -27,83 +28,55 @@ import {
 } from '@mui/icons-material';
 
 const MessUserProfile = () => {
-  const [user, setUser] = useState(null);
   const [editMode, setEditMode] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  
+  const { user, logout, refreshUser } = useAuth();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
-  
-  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
-
-  const fetchUserProfile = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      // Make sure this matches your backend route exactly
-      const response = await axiosInstance.get("/auth/profile");
-      
-      console.log("Profile data:", response.data); // Debug
-      
-      if (response.data && response.data.user) {
-        setUser(response.data.user);
-        setFormData({
-          name: response.data.user.name || "",
-          email: response.data.user.email || "",
-          password: "",
-        });
-      } else {
-        setError("Invalid response from server");
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      if (error.response?.status === 401) {
-        // Handle unauthorized access - redirect to login
-        setError("Session expired. Please login again.");
-        setTimeout(() => navigate("/login"), 2000);
-      } else {
-        setError("Failed to fetch profile. " + (error.response?.data?.error || "Please try again."));
-      }
-    } finally {
-      setLoading(false);
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        password: "",
+      });
     }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  }, [user]);
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setLoading(true);
     
     try {
-      // Use the user id from the state and make sure the API endpoint is correct
+      // Use the user id from the context
       const response = await axiosInstance.put(`/messUsers/${user.id}`, formData);
       setSuccess("Profile updated successfully!");
       setEditMode(false);
-      fetchUserProfile();
+      // Refresh user data in context
+      await refreshUser();
     } catch (error) {
       console.error("Error updating profile:", error);
       setError("Failed to update profile. " + (error.response?.data?.error || "Please try again."));
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleLogout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
-      localStorage.removeItem('token'); // Clear any stored tokens
+      await logout();
       navigate("/login");
     } catch (error) {
       console.error("Error during logout:", error);
@@ -111,9 +84,21 @@ const MessUserProfile = () => {
     }
   };
 
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  if (!user) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   if (loading) {
     return (

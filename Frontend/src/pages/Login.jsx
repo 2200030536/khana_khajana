@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import axiosInstance from '../axiosConfig';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 
 const Login = () => {
@@ -9,7 +9,33 @@ const Login = () => {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated, user } = useAuth();
+
+  const getDefaultRoute = (userType) => {
+    switch (userType) {
+      case 'messUser':
+        return '/messDashboard';
+      case 'studentUser':
+        return '/profile';
+      case 'admin':
+        return '/adminDashboard';
+      default:
+        return '/';
+    }
+  };
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const from = location.state?.from?.pathname || getDefaultRoute(user.userType);
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, user, navigate, location]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,32 +47,33 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    
     try {
-      const response = await axiosInstance.post('/auth/login', formData);
-      const { userType } = response.data.user; // Correctly access userType from response
-
+      const user = await login(formData);
+      
       // Navigate based on userType
-      if (userType === 'messUser') {
-        navigate('/messDashboard');
-      } else if (userType === 'studentUser') {
-        navigate('/profile');
-      } else if (userType === 'admin') {
-        navigate('/adminDashboard');
-      }
+      const targetRoute = getDefaultRoute(user.userType);
+      const from = location.state?.from?.pathname || targetRoute;
+      navigate(from, { replace: true });
+      
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Login error:', error);
 
       // Handle specific errors
       if (error.response && error.response.status === 401) {
-        alert('Invalid email or password. Please try again.');
+        setError('Invalid email or password. Please try again.');
       } else {
-        alert('An unexpected error occurred. Please try again later.');
+        setError('An unexpected error occurred. Please try again later.');
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div >
+    <div>
       <Navbar />
       
       <div className="flex justify-center items-center min-h-[calc(100vh-64px)] px-4 py-12">
@@ -66,6 +93,13 @@ const Login = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+
               {/* Email Input */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -125,9 +159,21 @@ const Login = () => {
               {/* Login Button */}
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:-translate-y-1"
+                disabled={loading}
+                className={`w-full py-3 px-4 ${
+                  loading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-amber-600 hover:bg-amber-700 transform hover:-translate-y-1'
+                } text-white font-medium rounded-lg shadow-md hover:shadow-lg transition duration-300`}
               >
-                Log In
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Logging in...
+                  </div>
+                ) : (
+                  'Log In'
+                )}
               </button>
 
               {/* Sign Up Link */}
