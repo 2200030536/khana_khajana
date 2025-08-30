@@ -1,10 +1,11 @@
 import express from 'express';
 import StudentTransaction from '../schemas/StudentTransaction.js';
+import { authenticateToken } from '../utils/jwtUtils.js';
 
 const router = express.Router();
 
-// Create a new StudentTransaction
-router.post('/', async (req, res) => {
+// Create a new StudentTransaction (Protected)
+router.post('/', authenticateToken, async (req, res) => {
   try {
     console.log('Request Body:', req.body);
     
@@ -134,8 +135,8 @@ router.post('/extend', async (req, res) => {
   }
 });
 
-// Get all StudentTransactions
-router.get('/', async (req, res) => {
+// Get all StudentTransactions (Protected)
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const transactions = await StudentTransaction.find();
     res.status(200).json(transactions);
@@ -144,8 +145,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get StudentTransaction by studentId
-router.get('/student/:studentId', async (req, res) => {
+// Get StudentTransaction by studentId (Protected)
+router.get('/student/:studentId', authenticateToken, async (req, res) => {
   try {
     const studentId = req.params.studentId;
 

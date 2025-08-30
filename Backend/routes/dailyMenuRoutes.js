@@ -1,10 +1,11 @@
 import express from 'express';
 import DailyMenu from '../schemas/DailyMenu.js';
 import { studentTransaction } from '../controllers/student.controller.js';
+import { authenticateToken } from '../utils/jwtUtils.js';
 const router = express.Router();
 
-// Create a new DailyMenu
-router.post('/', async (req, res) => {
+// Create a new DailyMenu (Protected - Mess User/Admin only)
+router.post('/', authenticateToken, async (req, res) => {
   try {
     const { breakfast, lunch, snacks, dinner, day, lastModifiedBy, lastModifiedAt } = req.body;
     const newMenu = new DailyMenu({ 
@@ -74,8 +75,8 @@ router.get('/day/:day', async (req, res) => {
   }
 });
 
-// Update a DailyMenu by day
-router.put('/day/:day', async (req, res) => {
+// Update a DailyMenu by day (Protected - Mess User/Admin only)
+router.put('/day/:day', authenticateToken, async (req, res) => {
   try {
     const { breakfast, lunch, snacks, dinner, lastModifiedBy, lastModifiedAt } = req.body;
     const updatedMenu = await DailyMenu.findOneAndUpdate(
@@ -92,8 +93,8 @@ router.put('/day/:day', async (req, res) => {
   }
 });
 
-// Delete a DailyMenu by day
-router.delete('/day/:day', async (req, res) => {
+// Delete a DailyMenu by day (Protected - Mess User/Admin only)
+router.delete('/day/:day', authenticateToken, async (req, res) => {
   try {
     const deletedMenu = await DailyMenu.findOneAndDelete({ day: req.params.day });
     if (!deletedMenu) {

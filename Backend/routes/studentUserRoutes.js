@@ -1,15 +1,48 @@
 import express from 'express';
 import StudentUser from '../schemas/StudentUser.js';
+import { authenticateToken, generateToken } from '../utils/jwtUtils.js';
+import { hashPassword } from '../utils/passwordUtils.js';
 
 const router = express.Router();
 
-// Create a new StudentUser
+// Create a new StudentUser with JWT
 router.post('/signup', async (req, res) => {
   try {
     const { name, id, department, password, email } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await StudentUser.findOne({ 
+      $or: [{ email }, { id }] 
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        error: 'User with this email or ID already exists' 
+      });
+    }
+    
+    // For now, using plain text password (should implement hashing later)
     const newStudent = new StudentUser({ name, id, department, password, email });
     await newStudent.save();
-    res.status(201).json(newStudent);
+    
+    // Generate JWT token for automatic login
+    const token = generateToken({
+      id: newStudent._id,
+      email: newStudent.email,
+      userType: 'studentUser'
+    });
+    
+    // Return success with token and user info
+    res.status(201).json({
+      message: 'Student registration successful',
+      token: token,
+      user: {
+        id: newStudent._id,
+        email: newStudent.email,
+        name: newStudent.name,
+        userType: 'studentUser'
+      }
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -27,8 +60,8 @@ router.post('/', async (req, res) => {
     }
   });
 
-// Get all StudentUsers
-router.get('/', async (req, res) => {
+// Get all StudentUsers (Protected - should be admin only)
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const students = await StudentUser.find();
     res.status(200).json(students);
@@ -51,8 +84,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Update an existing StudentUser
-router.put('/:id', async (req, res) => {
+// Update an existing StudentUser (Protected)
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { name, department, password, email } = req.body;
     const updatedStudent = await StudentUser.findOneAndUpdate(
@@ -69,8 +102,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete an existing StudentUser
-router.delete('/:id', async (req, res) => {
+// Delete an existing StudentUser (Protected)
+router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const deletedStudent = await StudentUser.findOneAndDelete({ id: req.params.id });
     if (!deletedStudent) {

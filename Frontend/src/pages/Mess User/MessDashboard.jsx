@@ -31,14 +31,14 @@ const MessDashboard = () => {
     setError('');
     
     try {
-      const dayNumber = new Date().getDay() + 1;
+      const dayNumber = new Date().getDay(); // 0-6 (Sunday-Saturday)
 
       // Fetch all required data in parallel
       const [studentsResponse, menusResponse, transactionsResponse, todayMenuResponse] = await Promise.all([
         axiosInstance.get('/students'),
         axiosInstance.get('/menus'),
         axiosInstance.get('/transactions'),
-        axiosInstance.get(`/menus/day/${dayNumber}`),
+        axiosInstance.get(`/menus/day-number/${dayNumber}`), // Use day-number endpoint
       ]);
       
       // Extract the count of items

@@ -136,7 +136,23 @@ const StudentUserSignup = () => {
       };
       
       const response = await axiosInstance.post('/students/signup', submissionData);
-      setSuccess(true);
+      
+      // Handle JWT token from signup response
+      if (response.data.token) {
+        // Store JWT token and user data
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        setSuccess(true);
+        
+        // Redirect to student dashboard after 2 seconds
+        setTimeout(() => {
+          navigate('/profile');
+        }, 2000);
+      } else {
+        // Fallback if no token (older API response)
+        setSuccess(true);
+      }
       
       // Reset form
       setFormData({
@@ -147,8 +163,6 @@ const StudentUserSignup = () => {
         confirmPassword: '',
         email: ''
       });
-      
-      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);

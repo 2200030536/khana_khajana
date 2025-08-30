@@ -1,11 +1,12 @@
 import express from 'express';
 import Contact from '../schemas/Contact.js';
+import { authenticateToken } from '../utils/jwtUtils.js';
 
 const router = express.Router();
 
 // Authentication middleware for admin routes
 const authenticateAdmin = async (req, res, next) => {
-  if (!req.session.user || req.session.user.userType !== 'admin') {
+  if (!req.user || req.user.userType !== 'admin') {
     return res.status(403).json({ error: 'Unauthorized: Admin access required' });
   }
   next();
@@ -49,7 +50,7 @@ router.post('/', async (req, res) => {
 });
 
 // Get all contact submissions (admin only)
-router.get('/', authenticateAdmin, async (req, res) => {
+router.get('/', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const { status, page = 1, limit = 10 } = req.query;
     const skip = (page - 1) * limit;
@@ -82,7 +83,7 @@ router.get('/', authenticateAdmin, async (req, res) => {
 });
 
 // Get a single contact by ID (admin only)
-router.get('/:id', authenticateAdmin, async (req, res) => {
+router.get('/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id);
     
@@ -98,7 +99,7 @@ router.get('/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Update contact status (admin only)
-router.patch('/:id/status', authenticateAdmin, async (req, res) => {
+router.patch('/:id/status', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const { status } = req.body;
     
@@ -125,7 +126,7 @@ router.patch('/:id/status', authenticateAdmin, async (req, res) => {
 });
 
 // Delete a contact (admin only)
-router.delete('/:id', authenticateAdmin, async (req, res) => {
+router.delete('/:id', authenticateToken, authenticateAdmin, async (req, res) => {
   try {
     const contact = await Contact.findByIdAndDelete(req.params.id);
     

@@ -132,7 +132,26 @@ const MessUserSignup = () => {
       };
       
       const response = await axiosInstance.post('/messUsers/signup', submissionData);
-      setSuccess(true);
+      
+      // Handle JWT token from signup response
+      if (response.data.token) {
+        // Store JWT token and user data
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        setSuccess(true);
+        
+        // Redirect to mess dashboard after 2 seconds
+        setTimeout(() => {
+          navigate('/messDashboard');
+        }, 2000);
+      } else {
+        // Fallback if no token (older API response)
+        setSuccess(true);
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+      }
       
       // Reset form
       setFormData({
@@ -142,11 +161,6 @@ const MessUserSignup = () => {
         password: '',
         confirmPassword: ''
       });
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
       
     } catch (error) {
       console.error('Error:', error);

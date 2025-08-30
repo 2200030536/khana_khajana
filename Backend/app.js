@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
-import session from 'express-session';
 import connectDB from './server/connect.mjs';
 
 import messUserRoutes from './routes/messUserRoutes.js';
@@ -18,24 +17,16 @@ const app = express();
 
 // Connect to MongoDB
 connectDB();
-const allowedOrigins = [
-  'https://khana-khajana-psi.vercel.app', // your frontend domain
-];
+// const allowedOrigins = [
+//   'https://khana-khajana-psi.vercel.app', 'http://localhost:3000'// your frontend domain
+// ];
 
 // ✅ Enable CORS for both local and deployed frontend
 app.use(cors({
-  // origin: ['http://localhost:3000', 'https://khana-khajana-psi.vercel.app','https://khana-khajana-psi.vercel.app'],
-  // credentials: true
-   origin: allowedOrigins,
-  credentials: true,
-}));
-
-// Session setup
-app.use(session({
-  secret: 'krishna',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
+  origin: ['http://localhost:3000'],
+  credentials: true
+  //  origin: allowedOrigins,
+  // credentials: true,
 }));
 
 app.use(express.json());
@@ -60,5 +51,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
-// ✅ Important: Do NOT use app.listen() — instead export the app
+// For local development - start the server
+const PORT = process.env.PORT || 3001;
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+}
+
+// ✅ For Vercel deployment - export the app
 export default app;

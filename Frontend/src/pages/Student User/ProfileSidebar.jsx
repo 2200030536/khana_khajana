@@ -36,12 +36,22 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
     const navigate = useNavigate();
     const handleLogout = async () => {
       try {
+        // Call logout endpoint (optional for JWT)
         await axiosInstance.post("/auth/logout");
+        
+        // Remove token and user data from localStorage
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        
         alert("Logout successful");
         navigate("/login");
       } catch (error) {
         console.error("Error during logout:", error);
-        alert("Failed to logout. Please try again.");
+        
+        // Even if server call fails, clear local storage
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        navigate("/login");
       }
     };
   

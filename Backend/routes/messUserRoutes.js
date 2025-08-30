@@ -1,15 +1,48 @@
 import express from 'express';
 import MessUser from '../schemas/MessUser.js';
+import { authenticateToken, generateToken } from '../utils/jwtUtils.js';
+import { hashPassword } from '../utils/passwordUtils.js';
 
 const router = express.Router();
 
-// Create a new MessUser
+// Create a new MessUser with JWT
 router.post('/signup', async (req, res) => {
   try {
     const { name, id, password, email } = req.body;
+    
+    // Check if user already exists
+    const existingUser = await MessUser.findOne({ 
+      $or: [{ email }, { id }] 
+    });
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        error: 'User with this email or ID already exists' 
+      });
+    }
+    
+    // For now, using plain text password (should implement hashing later)
     const newMessUser = new MessUser({ name, id, password, email });
     await newMessUser.save();
-    res.status(201).json(newMessUser);
+    
+    // Generate JWT token for automatic login
+    const token = generateToken({
+      id: newMessUser._id,
+      email: newMessUser.email,
+      userType: 'messUser'
+    });
+    
+    // Return success with token and user info
+    res.status(201).json({
+      message: 'Mess user registration successful',
+      token: token,
+      user: {
+        id: newMessUser._id,
+        email: newMessUser.email,
+        name: newMessUser.name,
+        userType: 'messUser'
+      }
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -28,8 +61,8 @@ router.post('/', async (req, res) => {
   });
   
 
-// Get all MessUsers
-router.get('/', async (req, res) => {
+// Get all MessUsers (Protected)
+router.get('/', authenticateToken, async (req, res) => {
   try {
     const messUsers = await MessUser.find();
     res.status(200).json(messUsers);

@@ -23,14 +23,18 @@ const Login = () => {
     e.preventDefault();
     try {
       const response = await axiosInstance.post('/auth/login', formData);
-      const { userType } = response.data.user; // Correctly access userType from response
-
+      const { token, user } = response.data;
+      
+      // Store JWT token in localStorage
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
       // Navigate based on userType
-      if (userType === 'messUser') {
+      if (user.userType === 'messUser') {
         navigate('/messDashboard');
-      } else if (userType === 'studentUser') {
+      } else if (user.userType === 'studentUser') {
         navigate('/profile');
-      } else if (userType === 'admin') {
+      } else if (user.userType === 'admin') {
         navigate('/adminDashboard');
       }
     } catch (error) {

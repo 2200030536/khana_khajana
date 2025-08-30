@@ -72,12 +72,12 @@ const StudentDashboard = () => {
         throw new Error("User profile information is incomplete");
       }
       
-      const dayNumber = new Date().getDay() + 1;
+      const dayNumber = new Date().getDay(); // 0-6 (Sunday-Saturday)
 
       // Split the API calls to handle errors independently
       try {
         // Menu data should be fetched regardless of transaction status
-        const menuResponse = await axiosInstance.get(`/menus/day/${dayNumber}`);
+        const menuResponse = await axiosInstance.get(`/menus/day-number/${dayNumber}`);
         const menuData = menuResponse.data;
         
         if (menuData) {
