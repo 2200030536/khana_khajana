@@ -1,18 +1,9 @@
 import express from 'express';
-import session from 'express-session';
 import MessUser from '../schemas/MessUser.js';
 import StudentUser from '../schemas/StudentUser.js';
 import Admin from '../schemas/Admin.js';
 
 const router = express.Router();
-
-// Configure session middleware
-router.use(session({
-  secret: 'krishna', // Replace with your own secret key
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Set to true if using HTTPS
-}));
 
 // Login route for all user types
 router.post('/login', async (req, res) => {
@@ -96,6 +87,16 @@ router.post('/logout', (req, res) => {
       return res.status(500).json({ error: 'Failed to logout' });
     }
     res.status(200).json({ message: 'Logout successful' });
+  });
+});
+
+// Test route to check session
+router.get('/session-test', (req, res) => {
+  res.json({
+    sessionID: req.sessionID,
+    session: req.session,
+    hasUser: !!req.session.user,
+    cookies: req.headers.cookie
   });
 });
 

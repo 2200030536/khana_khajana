@@ -34,9 +34,6 @@ const dailyMenuSchema = new mongoose.Schema({
   timestamps: true // This adds createdAt and updatedAt fields
 });
 
-// Add index for day field
-dailyMenuSchema.index({ day: 1 }, { unique: true });
-
 const DailyMenu = mongoose.model('DailyMenu', dailyMenuSchema);
 
 export default DailyMenu;
