@@ -38,12 +38,21 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === 'production', // Only secure in production (HTTPS)
     httpOnly: true, // Prevent XSS attacks
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site in dev
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+
+// Debug middleware for sessions
+app.use((req, res, next) => {
+  console.log('Session ID:', req.sessionID);
+  console.log('Session:', req.session);
+  console.log('Cookies:', req.headers.cookie);
+  next();
+});
 
 // Sample route
 app.get('/', (req, res) => {
