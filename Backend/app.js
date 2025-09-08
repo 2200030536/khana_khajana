@@ -3,6 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import connectDB from './server/connect.mjs';
 import messUserRoutes from './routes/messUserRoutes.js';
 import studentUserRoutes from './routes/studentUserRoutes.js';
@@ -25,21 +26,33 @@ connectDB();
 app.use(cors({
   origin: [
     'http://localhost:3000', // Frontend development server
-    'https://khana-khajana-psi.vercel.app' // Production frontend
+    'https://khana-khajana-psi.vercel.app', // Production frontend
+    'https://khana-khajana-y852.vercel.app' // Alternative production frontend
   ],
-  credentials: true // Allow credentials (cookies) to be sent
+  credentials: true, // Allow credentials (cookies) to be sent
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
 
 // Configure session middleware
 app.use(session({
-  secret: 'krishna', // Replace with your own secret key
+  secret: process.env.SESSION_SECRET || 'krishna', // Use environment variable in production
   resave: false,
   saveUninitialized: false, // Changed to false for security
+  name: 'sessionId', // Custom session name
+  store: process.env.NODE_ENV === 'production' ? MongoStore.create({
+    mongoUrl: process.env.ATLAS_URL,
+    touchAfter: 24 * 3600, // lazy session update
+    crypto: {
+      secret: process.env.SESSION_SECRET || 'krishna'
+    }
+  }) : undefined,
   cookie: { 
     secure: process.env.NODE_ENV === 'production', // Only secure in production (HTTPS)
     httpOnly: true, // Prevent XSS attacks
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site in dev
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site in production
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
   }
 }));
 
