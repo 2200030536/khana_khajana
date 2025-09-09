@@ -50,7 +50,7 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
     { label: "Browse Plans", icon: <ShoppingCartIcon />, key: "browsePlans"},
     { label: "Weekly Menu", icon: <MenuBookIcon />, key: "weeklyMenu"},
     { label: "Profile", icon: <EditIcon />, key: "profile"}, // Changed key to lowercase "profile"
-    // { label: "Transactions", icon: <ReceiptIcon />, key: "transactions"},
+  { label: "Transactions", icon: <ReceiptIcon />, key: "transactionsHistory"},
   ];
 
   return (

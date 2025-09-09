@@ -9,6 +9,7 @@ import ActionButtons from "./ActionButtons";
 import { keyframes } from "@emotion/react";
 import MealsPlans from "../Student User/MealsPlans";
 import StudentDashboard from "./StudentDashboard";
+import StudentTransactionsList from "./StudentTransactionsList";
 // Define animations
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateX(-20px); }
@@ -98,6 +99,8 @@ const Profile = () => {
               menus={menus}
               currentDayMenu={currentDayMenu}
             />
+      case 'transactionsHistory':
+        return <StudentTransactionsList />;
       default:
         return (
           <>

@@ -1128,7 +1128,7 @@ const MenuManager = () => {
             sx={{ mb: 2 }}
           />
           <Typography variant="h6" sx={{ animation: `${pulse} 2s infinite ease-in-out` }}>
-            {activeTab === 'create' ? 'Creating Menu...' : activeTab === 'update' ? 'Updating Menu...' : 'Deleting Menu...'}
+            {activeTab === 'create' ? 'Creating Menu...' : activeTab === 'update' ? 'Updating Menu...' : activeTab==='view'? 'Detecting Menu...' : 'Deleting Menu...'}
           </Typography>
         </Box>
       </Backdrop>

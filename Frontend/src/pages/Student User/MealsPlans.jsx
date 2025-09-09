@@ -273,13 +273,13 @@ const MealPlans = () => {
     // If no totalMealPrice (should not happen), use simple percentage calculation
     if (totalMealPrice === 0) {
       if (!mealSelections.breakfast) {
-        totalPrice = totalPrice * 0.85; // Reduce by 15%
+        totalPrice = totalPrice - breakfastPrice; // Reduce by 25%
       }
       if (!mealSelections.lunch) {
-        totalPrice = totalPrice * 0.75; // Reduce by 25%
+        totalPrice = totalPrice - lunchPrice; // Reduce by 40%
       }
       if (!mealSelections.dinner) {
-        totalPrice = totalPrice * 0.75; // Reduce by 25%
+        totalPrice = totalPrice - dinnerPrice; // Reduce by 40%
       }
     } else {
       // Calculate the actual meal proportion based on real pricing

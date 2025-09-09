@@ -79,21 +79,21 @@ app.use(session({
 app.use(express.json());
 
 // Debug middleware for sessions
-app.use((req, res, next) => {
-  console.log('Session ID:', req.sessionID,
-    '| hasUser:', !!req.session.user,
-    '| secure?', req.session.cookie.secure,
-    '| sameSite:', req.session.cookie.sameSite,
-    '| origin:', req.headers.origin);
-  if (!req.headers.cookie) {
-    console.log('-> No Cookie header received. If this is a cross-site XHR from production, check:');
-    console.log('   1) Frontend request includes withCredentials: true');
-    console.log('   2) Set-Cookie has SameSite=None; Secure');
-    console.log('   3) Browser devtools: Was Set-Cookie blocked? (3rd-party, insecure, or partitioned)');
-    console.log('   4) NODE_ENV or platform flags causing wrong sameSite/secure logic');
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log('Session ID:', req.sessionID,
+//     '| hasUser:', !!req.session.user,
+//     '| secure?', req.session.cookie.secure,
+//     '| sameSite:', req.session.cookie.sameSite,
+//     '| origin:', req.headers.origin);
+//   if (!req.headers.cookie) {
+//     console.log('-> No Cookie header received. If this is a cross-site XHR from production, check:');
+//     console.log('   1) Frontend request includes withCredentials: true');
+//     console.log('   2) Set-Cookie has SameSite=None; Secure');
+//     console.log('   3) Browser devtools: Was Set-Cookie blocked? (3rd-party, insecure, or partitioned)');
+//     console.log('   4) NODE_ENV or platform flags causing wrong sameSite/secure logic');
+//   }
+//   next();
+// });
 
 // Sample route
 app.get('/', (req, res) => {

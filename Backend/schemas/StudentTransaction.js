@@ -53,8 +53,9 @@ const studentTransactionSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'expired', 'canceled'],
-    default: 'active',
+    enum: ['active', 'expired', 'canceled', 'pending', 'refunded'],
+  // Default to 'pending' so unpaid or unconfirmed transactions are not treated as active
+  default: 'pending',
     required: true
   },
   refundDetails: {

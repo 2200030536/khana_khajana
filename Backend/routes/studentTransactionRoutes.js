@@ -3,6 +3,26 @@ import StudentTransaction from '../schemas/StudentTransaction.js';
 
 const router = express.Router();
 
+// Helper to mark past-due transactions as expired
+async function expirePastTransactions(studentId) {
+  const now = new Date();
+  const query = {
+    endDate: { $lt: now },
+    status: { $in: ['active', 'pending'] }
+  };
+  if (studentId) {
+    query.studentId = studentId;
+  }
+  try {
+    const result = await StudentTransaction.updateMany(query, { $set: { status: 'expired' } });
+    if (result.modifiedCount > 0) {
+      console.log(`Expired ${result.modifiedCount} transaction(s)${studentId ? ' for student ' + studentId : ''}.`);
+    }
+  } catch (e) {
+    console.warn('Failed to auto-expire transactions:', e.message);
+  }
+}
+
 // Create a new StudentTransaction
 router.post('/', async (req, res) => {
   try {
@@ -24,6 +44,12 @@ router.post('/', async (req, res) => {
     } = req.body;
     
     // Create new transaction with all required fields explicitly
+    // Derive internal status: if paymentStatus pending -> pending, if completed -> active, if failed -> pending (or could be failed), refunded -> refunded
+    let derivedStatus = 'pending';
+    if (paymentStatus === 'completed') derivedStatus = 'active';
+    else if (paymentStatus === 'failed') derivedStatus = 'pending';
+    else if (paymentStatus === 'refunded') derivedStatus = 'refunded';
+
     const newTransaction = new StudentTransaction({
       studentId,
       planType,
@@ -35,7 +61,7 @@ router.post('/', async (req, res) => {
       amount,
       paymentStatus,
       paymentMethod,
-      status
+      status: derivedStatus
     });
     
     // Save with validation
@@ -137,6 +163,7 @@ router.post('/extend', async (req, res) => {
 // Get all StudentTransactions
 router.get('/', async (req, res) => {
   try {
+  await expirePastTransactions();
     const transactions = await StudentTransaction.find();
     res.status(200).json(transactions);
   } catch (error) {
@@ -148,6 +175,7 @@ router.get('/', async (req, res) => {
 router.get('/student/:studentId', async (req, res) => {
   try {
     const studentId = req.params.studentId;
+  await expirePastTransactions(studentId);
 
     const transaction = await StudentTransaction
       .findOne({ studentId })
@@ -164,11 +192,25 @@ router.get('/student/:studentId', async (req, res) => {
   }
 });
 
+// Get full transaction history for a student (all transactions, newest first)
+router.get('/student/:studentId/history', async (req, res) => {
+  try {
+    const { studentId } = req.params;
+  await expirePastTransactions(studentId);
+    const transactions = await StudentTransaction.find({ studentId }).sort({ createdAt: -1 });
+    return res.status(200).json(transactions);
+  } catch (error) {
+    console.error('Error fetching StudentTransaction history:', error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 
 // Get all active transactions for a student
 router.get('/student/:studentId/active', async (req, res) => {
   try {
     const studentId = req.params.studentId;
+  await expirePastTransactions(studentId);
     const activeTransaction = await StudentTransaction.findOne({ 
       studentId, 
       status: 'active',
