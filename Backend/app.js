@@ -13,6 +13,7 @@ import dailyMenuRoutes from './routes/dailyMenuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import priceRoutes from './routes/priceRoutes.js';
 import contactRoutes from './routes/contactRoutes.js'; // Add this line
+import mealVerificationRoutes from './routes/mealVerificationRoutes.js';
 
 
 
@@ -110,6 +111,7 @@ app.use('/auth', authRoutes);
 app.use('/api/prices', priceRoutes);
 app.use('/api/daily-menus', dailyMenuRoutes);
 app.use('/api/contacts', contactRoutes); // Add this line
+app.use('/meals/verify', mealVerificationRoutes);
 
 // Serve the HTML file
 const __filename = fileURLToPath(import.meta.url);

@@ -53,6 +53,7 @@ const MessUserSidebar = ({ activeComponent, setActiveComponent, drawerWidth = 24
     { label: "Set Price", icon: <AttachMoneyIcon />, key: "setPrice" },
     { label: "Students", icon: <GroupIcon />, key: "students" },
     { label: "Transactions", icon: <ReceiptIcon />, key: "transactions" },
+  { label: "Verify Meal", icon: <ReceiptIcon />, key: "verifyMeal" },
     { label: "Add/Revoke User", icon: <PersonAddIcon />, key: "addRevokeUser" },
     { label: "Profile", icon: <AccountCircleIcon />, key: "profile" },
   ];

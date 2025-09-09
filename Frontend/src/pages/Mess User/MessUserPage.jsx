@@ -9,6 +9,7 @@ import MessDashboard from "./MessDashboard";
 import TransactionHistory from "./TransactionHistory";
 import UserManagement from "./UserManagement";
 import PriceSettings from "./PriceSettings";
+import VerifyMeal from "./VerifyMeal";
 
 function MessUserPage() {
   const [activeComponent, setActiveComponent] = useState("dashboard");
@@ -20,6 +21,7 @@ function MessUserPage() {
     setPrice: <PriceSettings />,
     students: <StudentDetails />,
     transactions: <TransactionHistory />,
+  verifyMeal: <VerifyMeal />,
     addRevokeUser: <UserManagement />,
     profile: <MessUserProfile />,
   };
