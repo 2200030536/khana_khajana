@@ -31,6 +31,14 @@ const allowedOrigins = [
   'https://khana-khajana-y852.vercel.app'
 ];
 
+// Robust production detection (Render / Vercel) even if NODE_ENV left as 'development'
+const isPlatformProd = (
+  process.env.NODE_ENV === 'production' ||
+  process.env.VERCEL === '1' ||
+  !!process.env.RENDER ||
+  process.env.PLATFORM === 'production'
+);
+
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -48,23 +56,22 @@ app.use((req, res, next) => {
 
 // Configure session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'krishna', // Use environment variable in production
+  secret: process.env.SESSION_SECRET || 'krishna',
   resave: false,
-  saveUninitialized: false, // Changed to false for security
-  name: 'sessionId', // Custom session name
-  store: process.env.NODE_ENV === 'production' ? MongoStore.create({
+  saveUninitialized: false,
+  name: 'kk_session',
+  store: isPlatformProd ? MongoStore.create({
     mongoUrl: process.env.ATLAS_URL,
-    touchAfter: 24 * 3600, // lazy session update
-    crypto: {
-      secret: process.env.SESSION_SECRET || 'krishna'
-    }
+    touchAfter: 24 * 3600,
+    crypto: { secret: process.env.SESSION_SECRET || 'krishna' }
   }) : undefined,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production', // Only secure in production (HTTPS)
-    httpOnly: true, // Prevent XSS attacks
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Allow cross-site in production
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
+  cookie: {
+    secure: isPlatformProd,               // must be true for SameSite=None
+    httpOnly: true,
+    sameSite: isPlatformProd ? 'none' : 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+    // Do NOT set domain; let browser infer so it works on Render subdomain
+    // path defaults to '/'
   }
 }));
 
@@ -73,9 +80,18 @@ app.use(express.json());
 
 // Debug middleware for sessions
 app.use((req, res, next) => {
-  console.log('Session ID:', req.sessionID);
-  console.log('Session has user:', !!req.session.user);
-  console.log('Cookie header:', req.headers.cookie);
+  console.log('Session ID:', req.sessionID,
+    '| hasUser:', !!req.session.user,
+    '| secure?', req.session.cookie.secure,
+    '| sameSite:', req.session.cookie.sameSite,
+    '| origin:', req.headers.origin);
+  if (!req.headers.cookie) {
+    console.log('-> No Cookie header received. If this is a cross-site XHR from production, check:');
+    console.log('   1) Frontend request includes withCredentials: true');
+    console.log('   2) Set-Cookie has SameSite=None; Secure');
+    console.log('   3) Browser devtools: Was Set-Cookie blocked? (3rd-party, insecure, or partitioned)');
+    console.log('   4) NODE_ENV or platform flags causing wrong sameSite/secure logic');
+  }
   next();
 });
 
