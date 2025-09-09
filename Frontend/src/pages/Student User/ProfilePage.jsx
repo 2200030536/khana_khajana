@@ -45,21 +45,28 @@ const Profile = () => {
         // Fetch transaction status if user is a student
         if (userData.userType === "studentUser") {
           try {
-            const transactionResponse = await axiosInstance.get(
-              `/transactions/student/${userData.id}`
-            );
+            const transactionResponse = await axiosInstance.get(`/transactions/student/${userData.id}`);
             const studentTransaction = transactionResponse.data;
-
             if (studentTransaction) {
-              const currentDate = new Date();
-              const endDate = new Date(studentTransaction.endDate);
-              setTransactionStatus(endDate >= currentDate ? "available" : "apply");
+              if (studentTransaction.status === 'pending') {
+                // First or current transaction exists but payment not completed yet
+                setTransactionStatus('pendingPayment');
+              } else {
+                const currentDate = new Date();
+                const endDate = new Date(studentTransaction.endDate);
+                setTransactionStatus(endDate >= currentDate ? 'available' : 'apply');
+              }
             } else {
-              setTransactionStatus("apply");
+              setTransactionStatus('apply');
             }
           } catch (err) {
-            console.error("Error fetching transaction:", err);
-            setTransactionStatus("apply");
+            // 404 means no transaction yet for brand new user
+            if (err?.response?.status === 404) {
+              setTransactionStatus('apply');
+            } else {
+              console.error('Error fetching transaction:', err);
+              setTransactionStatus('apply');
+            }
           }
         }
 

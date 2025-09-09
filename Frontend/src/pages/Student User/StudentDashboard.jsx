@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,6 +53,7 @@ const StudentDashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [latestTransaction, setLatestTransaction] = useState(null);
+  const [pendingFirstTransaction, setPendingFirstTransaction] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -68,9 +70,10 @@ const StudentDashboard = () => {
       const profileResponse = await axiosInstance.get("/auth/profile");
       const userData = profileResponse.data.user;
 
-      if (!userData || !userData.id) {
+      if (!userData) {
         throw new Error("User profile information is incomplete");
       }
+      const numericStudentId = typeof userData.id === 'number' ? userData.id : userData.studentId;
       
       const dayNumber = new Date().getDay() + 1;
 
@@ -126,29 +129,31 @@ const StudentDashboard = () => {
       const upcomingMealsFiltered = upcomingMeals.filter(meal => meal.time > now);
       setUpcomingEvents(upcomingMealsFiltered);
 
-      // Now fetch transaction data separately
+      // Now fetch latest transaction data separately (single latest record)
       try {
-        const [mealPlanResponse, transactionsResponse, latestTransactionResponse] = await Promise.all([
-          axiosInstance.get(`/transactions/student/${userData.id}`),
-          axiosInstance.get(`/transactions/student/${userData.id}`),
-          axiosInstance.get(`/api/daily-menus/latestTransaction/${userData.id}`)
-        ]);
-
-        // Process meal plan data
-        setMealPlan(mealPlanResponse.data);
-
-        // Process transactions
-        const transactions = Array.isArray(transactionsResponse.data)
-          ? transactionsResponse.data
-          : transactionsResponse.data?.transactions || [];
-        
-        setRecentTransactions(transactions.slice(0, 5));
-
-        // Set latest transaction
-        setLatestTransaction(latestTransactionResponse.data);
+        if (numericStudentId === undefined) {
+          setPendingFirstTransaction(false);
+        } else {
+          const txRes = await axiosInstance.get(`/transactions/student/${numericStudentId}`);
+        const tx = txRes.data;
+        setLatestTransaction(tx);
+        if (tx) {
+          // If transaction is active use as current meal plan
+            if (tx.status === 'active') {
+              setMealPlan(tx);
+            } else if (tx.status === 'pending') {
+              setPendingFirstTransaction(true);
+            }
+            setRecentTransactions([tx]);
+          }
+        }
       } catch (transactionError) {
-        console.error('Error fetching transaction data:', transactionError);
-        // Don't set error state, we still want to display menu and schedule
+        // 404 => no transaction yet for brand new user (ignore error)
+        if (transactionError?.response?.status === 404) {
+          setPendingFirstTransaction(false);
+        } else {
+          console.error('Error fetching transaction data:', transactionError);
+        }
       }
 
       setLoading(false);
@@ -203,28 +208,24 @@ const StudentDashboard = () => {
 
   // Helper function to render meal plan details
   const renderLatestTransaction = () => {
-    if (!latestTransaction || !latestTransaction.data) return 'No recent transactions';
-    
-    const txData = latestTransaction.data;
-    
+    if (!latestTransaction) return 'No recent transactions';
+    const tx = latestTransaction;
     return (
       <div>
         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-          Transaction ID: {txData.transactionId?.substring(0, 8)}...
+          Transaction ID: {tx.transactionId?.toString().substring(0, 8)}...
         </Typography>
         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-          Status: {txData.paymentStatus}
+          Status: {tx.paymentStatus} {tx.status === 'pending' && '(Pending Activation)'}
         </Typography>
         <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-          Meals: {[
-            txData.breakfast ? 'Breakfast' : '', 
-            txData.lunch ? 'Lunch' : '', 
-            txData.dinner ? 'Dinner' : ''
-          ].filter(Boolean).join(', ')}
+          Meals: {[tx.breakfast ? 'Breakfast' : '', tx.lunch ? 'Lunch' : '', tx.dinner ? 'Dinner' : ''].filter(Boolean).join(', ')}
         </Typography>
-        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-          Valid: {formatDate(txData.startDate)} - {formatDate(txData.endDate)}
-        </Typography>
+        {tx.startDate && tx.endDate && (
+          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+            Valid: {formatDate(tx.startDate)} - {formatDate(tx.endDate)}
+          </Typography>
+        )}
       </div>
     );
   };
@@ -291,19 +292,44 @@ const StudentDashboard = () => {
                 </>
               ) : (
                 <>
-                  <Typography variant="h6" align="center" sx={{ mb: 2 }}>
-                    No Active Meal Plan
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    sx={{
-                      bgcolor: 'rgba(255, 255, 255, 0.2)',
-                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
-                    }} onClick={() => navigate('/meals-plans')}
-                  >
-                    Browse Plans
-                  </Button>
+                  {pendingFirstTransaction ? (
+                    <>
+                      <Typography variant="h6" align="center" sx={{ mb: 1 }}>
+                        Plan Pending Payment
+                      </Typography>
+                      <Typography variant="body2" align="center" sx={{ mb: 2 }}>
+                        Your first plan is awaiting payment confirmation.
+                      </Typography>
+                      <Chip label="Pending" color="warning" size="small" sx={{ mb: 2 }} />
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        sx={{
+                          bgcolor: 'rgba(255, 255, 255, 0.2)',
+                          '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
+                        }}
+                        onClick={() => navigate('/meals-plans')}
+                      >
+                        Explore Other Plans
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Typography variant="h6" align="center" sx={{ mb: 2 }}>
+                        No Active Meal Plan
+                      </Typography>
+                      <Button
+                        variant="contained"
+                        fullWidth
+                        sx={{
+                          bgcolor: 'rgba(255, 255, 255, 0.2)',
+                          '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
+                        }} onClick={() => navigate('/meals-plans')}
+                      >
+                        Browse Plans
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </CardContent>
@@ -373,7 +399,12 @@ const StudentDashboard = () => {
                 <Typography variant="h6">Recent Transactions</Typography>
               </Box>
 
-              {recentTransactions.length > 0 ? (
+              {pendingFirstTransaction && recentTransactions.length === 0 && (
+                <Alert severity="warning" sx={{ bgcolor:'rgba(255,255,255,0.15)', color:'#fff' }}>
+                  Your first transaction is pending. Once payment completes it will appear here.
+                </Alert>
+              )}
+              {!pendingFirstTransaction && recentTransactions.length > 0 ? (
                 <List dense>
                   {recentTransactions.map((transaction, index) => (
                     <ListItem key={index} sx={{
@@ -384,18 +415,18 @@ const StudentDashboard = () => {
                       animation: `${slideIn} ${0.3 + index * 0.1}s ease-out`
                     }}>
                       <ListItemText
-                        primary={`₹${transaction.amount}`}
+                        primary={`₹${transaction.amount || 0}`}
                         secondary={
                           <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                            {formatDate(transaction.date)}
+                            {transaction.createdAt ? formatDate(transaction.createdAt) : '—'}
                           </Typography>
                         }
                       />
                       <Chip
-                        label={transaction.status || 'Completed'}
+                        label={transaction.status || transaction.paymentStatus || 'Completed'}
                         size="small"
                         sx={{
-                          bgcolor: transaction.status === 'pending' ? 'warning.light' : 'success.light',
+                          bgcolor: (transaction.status === 'pending' || transaction.paymentStatus === 'pending') ? 'warning.light' : 'success.light',
                           color: 'white',
                           fontSize: '0.7rem'
                         }}

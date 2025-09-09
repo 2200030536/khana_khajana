@@ -6,9 +6,6 @@ import {
   Typography, 
   Divider, 
   List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
   Drawer,
   Button,
   Chip
@@ -23,6 +20,7 @@ import {
   
 } from "@mui/icons-material";
 import { keyframes } from "@emotion/react";
+import SidebarMenuItem from './SidebarMenuItem';
 
 // Define pulse animation
 const pulse = keyframes`
@@ -92,48 +90,15 @@ const ProfileSidebar = ({ drawerWidth, transactionStatus, activeItem, setActiveI
       
       <List component="nav" sx={{ p: 1.5 }}>
         {menuItems.map((item, index) => (
-          <ListItem
+          <SidebarMenuItem
             key={item.key}
-            onClick={() => setActiveItem(item.key)}
+            icon={item.icon}
+            label={item.label}
             selected={activeItem === item.key}
-            button // Add this prop to make it clickable
-            sx={{
-              borderRadius: 1.5,
-              mb: index < menuItems.length - 1 ? 1 : 0,
-              transition: "all 0.3s ease",
-              backgroundColor: activeItem === item.key ? "rgba(255,255,255,0.15)" : "transparent",
-              animation: `${fadeIn} ${0.3 + index * 0.1}s ease-out`,
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.2)",
-                transform: "translateX(5px)",
-              },
-              "&.Mui-selected": {
-                backgroundColor: "rgba(255,255,255,0.15)",
-              },
-              "&.Mui-selected:hover": {
-                backgroundColor: "rgba(255,255,255,0.25)",
-              },
-            }}
-          >
-            <ListItemIcon 
-              sx={{ 
-                color: "#fff", 
-                minWidth: 40,
-                transition: "transform 0.2s ease",
-                ...(activeItem === item.key && {
-                  transform: "scale(1.2)",
-                })
-              }}
-            >
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.label}
-              primaryTypographyProps={{
-                fontWeight: activeItem === item.key ? 600 : 400,
-              }} 
-            />
-          </ListItem>
+            onClick={() => setActiveItem(item.key)}
+            animation={fadeIn}
+            delay={index}
+          />
         ))}
       </List>
       <Box sx={{ mt: "auto", p: 2 }}>
