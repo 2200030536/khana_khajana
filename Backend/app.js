@@ -17,22 +17,34 @@ import contactRoutes from './routes/contactRoutes.js'; // Add this line
 
 
 const app = express();
+// Trust proxy so secure cookies work behind Vercel/Render reverse proxy
+app.set('trust proxy', 1);
 const port = 3001;
 
 // Connect to MongoDB
 connectDB();
 
 // Enable CORS for both localhost and production
-app.use(cors({
-  origin: [
-    'http://localhost:3000', // Frontend development server
-    'https://khana-khajana-psi.vercel.app', // Production frontend
-    'https://khana-khajana-y852.vercel.app' // Alternative production frontend
-  ],
-  credentials: true, // Allow credentials (cookies) to be sent
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
-}));
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://khana-khajana-psi.vercel.app',
+  'https://khana-khajana-y852.vercel.app'
+];
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Vary', 'Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
 
 // Configure session middleware
 app.use(session({
@@ -62,8 +74,8 @@ app.use(express.json());
 // Debug middleware for sessions
 app.use((req, res, next) => {
   console.log('Session ID:', req.sessionID);
-  console.log('Session:', req.session);
-  console.log('Cookies:', req.headers.cookie);
+  console.log('Session has user:', !!req.session.user);
+  console.log('Cookie header:', req.headers.cookie);
   next();
 });
 

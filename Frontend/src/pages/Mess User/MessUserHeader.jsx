@@ -15,7 +15,8 @@ import {
 import { AccountCircle, Notifications, Settings, Help } from '@mui/icons-material';
 import axiosInstance from '../../axiosConfig';
 
-const MessUserHeader = ({ activeComponent }) => {
+// Added setActiveComponent prop so header can change active view without ReferenceError
+const MessUserHeader = ({ activeComponent, setActiveComponent }) => {
   const [user, setUser] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -172,7 +173,11 @@ const MessUserHeader = ({ activeComponent }) => {
           <Divider />
           
           <MenuItem onClick={() => { 
-            setActiveComponent("profile"); 
+            if (typeof setActiveComponent === 'function') {
+              setActiveComponent("profile"); 
+            } else {
+              console.warn('setActiveComponent prop not provided to MessUserHeader');
+            }
             handleClose();
           }}>
             <AccountCircle sx={{ mr: 1.5 }} fontSize="small" />
