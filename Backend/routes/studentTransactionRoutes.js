@@ -1,5 +1,12 @@
 import express from 'express';
 import StudentTransaction from '../schemas/StudentTransaction.js';
+export function deriveStatusFromPayment(paymentStatus) {
+  let derivedStatus = 'pending';
+  if (paymentStatus === 'completed') derivedStatus = 'active';
+  else if (paymentStatus === 'failed') derivedStatus = 'pending';
+  else if (paymentStatus === 'refunded') derivedStatus = 'refunded';
+  return derivedStatus;
+}
 
 const router = express.Router();
 
@@ -45,10 +52,7 @@ router.post('/', async (req, res) => {
     
     // Create new transaction with all required fields explicitly
     // Derive internal status: if paymentStatus pending -> pending, if completed -> active, if failed -> pending (or could be failed), refunded -> refunded
-    let derivedStatus = 'pending';
-    if (paymentStatus === 'completed') derivedStatus = 'active';
-    else if (paymentStatus === 'failed') derivedStatus = 'pending';
-    else if (paymentStatus === 'refunded') derivedStatus = 'refunded';
+  const derivedStatus = deriveStatusFromPayment(paymentStatus);
 
     const newTransaction = new StudentTransaction({
       studentId,

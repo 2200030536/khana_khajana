@@ -14,6 +14,7 @@ import authRoutes from './routes/authRoutes.js';
 import priceRoutes from './routes/priceRoutes.js';
 import contactRoutes from './routes/contactRoutes.js'; // Add this line
 import mealVerificationRoutes from './routes/mealVerificationRoutes.js';
+import metricsRoutes from './routes/metricsRoutes.js';
 
 
 
@@ -28,6 +29,7 @@ connectDB();
 // Enable CORS for both localhost and production
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://localhost:5173',
   'https://khana-khajana-psi.vercel.app',
   'https://khana-khajana-y852.vercel.app'
 ];
@@ -42,7 +44,8 @@ const isPlatformProd = (
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
+  const isLocalDev = origin && /^http:\/\/(localhost|127\.0\.0\.1)(:\\d+)?$/.test(origin);
+  if (allowedOrigins.includes(origin) || isLocalDev) {
     res.header('Access-Control-Allow-Origin', origin);
   }
   res.header('Vary', 'Origin');
@@ -112,6 +115,7 @@ app.use('/api/prices', priceRoutes);
 app.use('/api/daily-menus', dailyMenuRoutes);
 app.use('/api/contacts', contactRoutes); // Add this line
 app.use('/meals/verify', mealVerificationRoutes);
+app.use('/metrics', metricsRoutes);
 
 // Serve the HTML file
 const __filename = fileURLToPath(import.meta.url);
@@ -121,4 +125,10 @@ app.use(express.static(path.join(__dirname, '../Frontend')));
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
+  // Run full API test suites and unit tests on startup
+  import('./tests/run-all.mjs')
+    .then(() => import('./tests/unit/run-unit.mjs'))
+    .catch((err) => {
+      console.error('Startup tests failed to execute:', err?.message || err);
+    });
 });

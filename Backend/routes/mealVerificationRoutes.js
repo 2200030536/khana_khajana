@@ -5,7 +5,7 @@ import DailyMeal from '../schemas/DailyMeal.js';
 const router = express.Router();
 
 // Helper: get today in YYYY-MM-DD
-function todayKey() {
+export function todayKey() {
   const d = new Date();
   return d.toISOString().slice(0,10);
 }
